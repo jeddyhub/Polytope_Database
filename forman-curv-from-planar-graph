@@ -1,3 +1,11 @@
+# this is code in python
+# used in the situation where there we have the adjacency matrix of a planar, 3-connected graph (i.e. the graph of a 3D polytope) and we wish to know the forman ricci curvature of the edges of this polytope
+
+# import relevant packages
+import numpy as np
+import math
+import networkx as nx
+
 # function that takes in the adjacency matrix of a planar graph (must be a numpy array), constructs a face lattice of its embedding, and returns a dictionary of its edges' forman ricci curvature
 def forman(graph):
   forman_dict = {} # keys are edges, values are its forman ricci curvature
