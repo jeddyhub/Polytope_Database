@@ -69,3 +69,54 @@ def forman(poly):
         forman_dict[i] = forman_curv
         
     return(forman_dict)        
+
+#####################################################
+
+# this function takes in a Sage polytope, and if it has everywhere positive forman ricci curvature, computes a bound on its diameter
+def forman_bound(poly):
+    num_2faces = {} # keys are edges, values are the number of 2-faces it's contained in 
+    
+    curv_dict = forman(poly)
+    curv_list = []
+    
+    n_verts = poly.f_vector()[1]
+    n_edges = poly.f_vector()[2]
+    n_faces = poly.f_vector()[3]
+    
+    c_poly = CombinatorialPolyhedron(poly)
+    
+    index_first_edge = n_verts + 1
+    index_last_edge = index_first_edge + n_edges - 1
+    
+    index_first_face = index_last_edge + 1
+    index_last_face = index_first_face + n_faces - 1
+    
+    for key in curv_dict:
+        curv_list += [curv_dict[key]]
+    curv_list.sort()
+    
+    if curv_list[0] <= 0:
+        print('polytope not everywhere positive :-(')
+    else:
+        # pick an edge and record how many faces it's contained in
+        for i in range(index_first_edge, index_last_edge + 1):
+            e = c_poly.face_by_face_lattice_index(i)
+            
+            # pick out which faces e is contained in 
+            faces_to_check = []
+            
+            for k in range(index_first_face, index_last_face + 1):
+                face = c_poly.face_by_face_lattice_index(k)
+                if e.is_subface(face):
+                    faces_to_check = faces_to_check + [k]
+                    
+            num_2faces[i] = len(faces_to_check)
+    
+        num_2faces_list = []
+
+        for edge in num_2faces:
+            num_2faces_list += [num_2faces[edge]]
+
+        T_P = max(num_2faces_list) + 1
+
+        return( (2/curv_list[0]) * T_P)
