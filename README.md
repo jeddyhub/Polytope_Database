@@ -11,5 +11,6 @@ This is data originating from the online graph database House of Graphs. We took
 ### forman-curv-from-planar-graph
 Code in python, used in the situation where there we have the adjacency matrix of a planar, 3-connected graph (i.e. the graph of a 3D polytope) and we wish to know the forman ricci curvature of the edges of this polytope.
 ### forman-curvature-sage
-### Resistance-Curvatures
+Code in SageMath, utilizing the Polytope object, to compute its Forman Ricci curvature. Can be a polytope of any dimension! Also has code to compute the polytope diameter bound presented in Forman's original paper. 
 
+### Resistance-Curvatures
