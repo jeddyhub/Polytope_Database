@@ -5,11 +5,10 @@ def graph_features(A):
     # 'adjacency_matrix, 'edge_list',
     # 'algebraic_connectivity', 'average_degree', 'clique_number', 'density', 
     # 'diameter', 'girth', 'independence_number', 'index', 
-    # 'laplacian_largest_eigenvalue', 'length_of_longest_path',
-    # 'matching_number', 'maximum_degree', 'minimum_degree', 'number_of_edges', 
-    # 'number_of_spanning_trees', 'number_of_triangles', 'number_of_vertices', 
-    # 'number_of_zero_eigenvalues', 'radius', 'second_largest_eigenvalue', 
-    # 'smallest_eigenvalue', 'vertex_connectivity', 'vertex_cover_number'
+    # 'laplacian_largest_eigenvalue', 'matching_number', 'maximum_degree', 
+    # 'minimum_degree', 'number_of_edges', 'number_of_spanning_trees', 
+    # 'number_of_triangles', 'number_of_vertices', 'number_of_zero_eigenvalues', 
+    # 'radius', 'second_largest_eigenvalue', 'smallest_eigenvalue', 'vertex_connectivity', 'vertex_cover_number'
 
     invariants = []
     num_verts = len(A[0])
@@ -84,11 +83,6 @@ def graph_features(A):
     sorted_L_eigenvals = sorted(L_eigenvals, reverse=True, key=lambda x: abs(x))
     largest_L_eigenval = abs(sorted_L_eigenvals[0])
     invariants += [largest_L_eigenval]
-    
-    # length of longest path
-    # also np hard...
-    length_longest_path = False
-    invariants += [length_longest_path]
     
     # matching number 
     matching = nx.maximal_matching(G)
