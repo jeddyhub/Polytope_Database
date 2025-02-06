@@ -122,5 +122,3 @@ def p_k_vector(graph):
             p_vector += [0]
 
     return(p_vector)
-
-# function to add a new row
