@@ -129,7 +129,7 @@ def p_k_vector(graph):
     return(p_vector)
 
 # function to add a new row
-def add_some_rows(og_file_path, new_adj_mats):
+def add_some_rows(og_file_path, new_adj_mats, new_file_path):
   # new_file_path
 
   # inputs:
