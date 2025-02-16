@@ -20,4 +20,4 @@ jobs:
           pip install networkx graphcalc pytest
 
       - name: Run tests
-        run: pytest tests/
+        run: pytest Simple_Polytope_Data/tests/
