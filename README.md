@@ -1,5 +1,22 @@
-# Polytope-Curvature
-Hello! Here we store code and generated data from our Summer 2024 (and ongoing) project.
-We are striving to develop a database of combinatorial polytopes.
-At the moment, we are focusing on developing our database of simple 3-polytopes.
-We hope to move on to a more diverse database of 3-polytopes soon, and eventually catalog higher-dimensional polytopes.
+# Polytope Database Manager
+
+1. Clone the repo.
+```bash
+git clone https://github.com/jeddyhub/Polytope_Database.git
+```
+
+2. Set up a Python virtual environment. (Recommended)
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
+
+3. Install requirements.
+```bash
+pip install -r requirements.txt
+```
+
+4. Run the main database script.
+```bash
+python simple_polytope_manager.py
+```
