@@ -86,28 +86,18 @@ def recompute_csv_database():
     df.to_csv(output_csv, index=False)
     console.print(f"\n[bold green]CSV file '{output_csv}' saved with {len(df)} records.[/bold green]")
 
+import os
+
 def add_new_edge_list():
     """
     Prompts the user to input a new edge list interactively and then updates the CSV database.
-    A live table is shown with the edges added so far.
-    If the computed properties are not accepted, the new edge list file is removed.
+    The file name is automatically generated in the form simple_polytope_N.txt (N being next in sequence).
+    After computing the properties, the script displays them and asks for confirmation before updating.
+    If the user does not accept the computed properties, the new edge list file is removed.
+    The user can type 'restart' at any prompt to cancel and return to the main menu.
     """
-    from rich.live import Live
-    from rich.table import Table
-
-    def build_edges_table(edges):
-        table = Table(title="Edges Added So Far")
-        table.add_column("Index", justify="right", style="cyan", no_wrap=True)
-        table.add_column("Edge", style="magenta")
-        for i, (u, v) in enumerate(edges, start=1):
-            table.add_row(str(i), f"{u} {v}")
-        return table
-
     edge_dir = os.path.join("Simple_Polytope_Data", "Edge_Data")
-    existing_files = [
-        f for f in os.listdir(edge_dir)
-        if f.startswith("simple_polytope_") and f.endswith(".txt")
-    ]
+    existing_files = [f for f in os.listdir(edge_dir) if f.startswith("simple_polytope_") and f.endswith(".txt")]
     numbers = []
     for f in existing_files:
         try:
@@ -119,43 +109,32 @@ def add_new_edge_list():
     new_file_name = f"simple_polytope_{next_number}.txt"
     new_file_path = os.path.join(edge_dir, new_file_name)
 
-    console.print(
-        Panel(
-            f"[bold green]New edge list will be saved as: {new_file_name}[/bold green]",
-            style="blue"
-        )
-    )
-    console.print(
-        "[bold cyan]Enter edges one per line in the format 'source target' or 'source, target'.[/bold cyan]"
-    )
-    console.print(
-        "[bold cyan]Type 'done' when finished, or 'restart' to cancel and return to the main menu.[/bold cyan]"
-    )
+    console.print(Panel(f"[bold green]New edge list will be saved as: {new_file_name}[/bold green]", style="blue"))
+    console.print("[bold cyan]Enter edges one per line in the format 'source target' or 'source, target'.[/bold cyan]")
+    console.print("[bold cyan]Type 'done' when finished, or 'restart' at any time to cancel and return to the main menu.[/bold cyan]")
 
     edges = []
-    # Use Live to display the table of edges as it updates.
-    with Live(build_edges_table(edges), refresh_per_second=4, console=console) as live:
-        while True:
-            line = Prompt.ask("[bold magenta]Edge[/bold magenta]").strip()
-            if line.lower() == "done":
-                break
-            if line.lower() == "restart":
-                console.print("[red]Restarting edge entry process. Returning to main menu.[/red]")
-                return
-            parts = line.split(",") if "," in line else line.split()
-            if len(parts) != 2:
-                console.print(
-                    "[red]Invalid format. Please enter two numbers separated by a space or comma.[/red]"
-                )
-                continue
-            try:
-                u = int(parts[0].strip())
-                v = int(parts[1].strip())
-            except ValueError:
-                console.print("[red]Invalid numbers. Please enter valid integers.[/red]")
-                continue
-            edges.append((u, v))
-            live.update(build_edges_table(edges))
+    while True:
+        line = Prompt.ask("[bold magenta]Edge[/bold magenta]").strip()
+        if line.lower() == "done":
+            break
+        if line.lower() == "restart":
+            console.print("[red]Restarting edge entry process. Returning to main menu.[/red]")
+            return
+        if ',' in line:
+            parts = line.split(',')
+        else:
+            parts = line.split()
+        if len(parts) != 2:
+            console.print("[red]Invalid format. Please enter two numbers separated by a space or comma.[/red]")
+            continue
+        try:
+            u = int(parts[0].strip())
+            v = int(parts[1].strip())
+        except ValueError:
+            console.print("[red]Invalid numbers. Please enter valid integers.[/red]")
+            continue
+        edges.append((u, v))
 
     if not edges:
         console.print("[red]No edges were entered. Aborting.[/red]")
@@ -171,19 +150,15 @@ def add_new_edge_list():
         console.print(f"[red]Error writing file: {e}[/red]")
         return
 
+    # Compute properties for the new edge list.
     property_names = get_property_names()
     new_props = compute_properties_from_edge_file(new_file_name, property_names)
 
-    console.print(
-        Panel("[bold blue]Computed properties for the new edge list:[/bold blue]", style="magenta")
-    )
+    # Display computed properties for user verification.
+    console.print(Panel("[bold blue]Computed properties for the new edge list:[/bold blue]", style="magenta"))
     for key, value in new_props.items():
         console.print(f"[bold]{key}:[/bold] {value}")
-    confirm = Prompt.ask(
-        "\n[bold yellow]Do these properties look correct? (y/n)[/bold yellow]",
-        choices=["y", "n"],
-        default="y"
-    )
+    confirm = Prompt.ask("\n[bold yellow]Do these properties look correct? (y/n)[/bold yellow]", choices=["y", "n"], default="y")
     if confirm != 'y':
         console.print("[red]Aborting update. Removing new edge list file.[/red]")
         try:
@@ -192,6 +167,7 @@ def add_new_edge_list():
             console.print(f"[red]Error removing file: {e}[/red]")
         return
 
+    # Update the CSV database.
     csv_path = os.path.join("Simple_Polytope_Data", "simple_polytope_properties.csv")
     if os.path.exists(csv_path):
         try:
@@ -202,11 +178,9 @@ def add_new_edge_list():
     else:
         df = pd.DataFrame()
 
-    polytope_name = new_file_name[:-4]
+    polytope_name = new_file_name[:-4]  # Remove .txt extension.
     if 'name' in df.columns and polytope_name in df['name'].values:
-        console.print(
-            f"[yellow]Polytope '{polytope_name}' already exists in the CSV database. Overwriting the record.[/yellow]"
-        )
+        console.print(f"[yellow]Polytope '{polytope_name}' already exists in the CSV database. Overwriting the record.[/yellow]")
         df = df[df['name'] != polytope_name]
 
     df = df.append(new_props, ignore_index=True)
@@ -215,7 +189,6 @@ def add_new_edge_list():
         console.print(f"[bold green]CSV database updated. It now contains {len(df)} records.[/bold green]")
     except Exception as e:
         console.print(f"[red]Error writing CSV file: {e}[/red]")
-
 
 
 def display_properties_of_entry():
@@ -320,7 +293,7 @@ def main():
                 "A: Recompute the entire CSV database",
                 "B: Add a new edge list to the database",
                 "C: Display properties for a chosen edge list",
-                "D: Run simple polytope tests",
+                "D: Run simple polytope tests directory",
                 "E: Exit",
             ],
             style=custom_style,
