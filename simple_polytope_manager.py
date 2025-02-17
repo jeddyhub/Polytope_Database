@@ -158,7 +158,6 @@ def add_new_edge_list():
     # VALIDATE SIMPLE POLYTOPE GRAPH
     # -----------------------------
     # Build a NetworkX graph from the entered edges.
-    import networkx as nx
     try:
         G = nx.Graph()
         G.add_edges_from(edges)

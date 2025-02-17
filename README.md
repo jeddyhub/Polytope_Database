@@ -34,3 +34,30 @@ pip install -r requirements.txt
 ```bash
 python simple_polytope_manager.py
 ```
+
+When the script runs, you'll be presented with a menu:
+- **A: Recompute the entire CSV database**
+
+Selecting this option will:
+Prompt you for confirmation (warning that the existing CSV file will be overwritten).
+Process all edge list files from Simple_Polytope_Data/Edge_Data with a progress bar.
+Generate/update the CSV file (simple_polytope_properties.csv).
+
+- **B: Add a new edge list to the database**
+
+Selecting this option will:
+Automatically generate the next available file name (e.g., simple_polytope_2.txt).
+Prompt you to enter edges (one per line, either as "source target" or "source, target").
+Type done to finish entering edges or restart at any time to cancel and return to the main menu. After saving, the script computes the properties for the new edge list and displays them. You'll then be asked to confirm whether the computed properties are correct before updating the CSV database.
+
+- **C: Display properties for a chosen edge list**
+
+Selecting this option will:
+Display the edge list file names for each known polytope. The user will be prompted to enter in the numerical identifier for a polytope. Thereafter, the program computes all properties of the polytope that are currently being stored.
+
+- **D: Run simple polytope tests directory**
+Selecting this option will:
+Run all tests in the `Simple_Polytope_Data` directory. Currently, this consists of checking if all edge lists being stored belong to simple polytope graphs.
+
+- **E: Exit**
+This option terminates the program.
