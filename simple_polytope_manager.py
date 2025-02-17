@@ -12,6 +12,20 @@ import questionary
 from prompt_toolkit.styles import Style
 import pyfiglet
 
+# Define a custom style for the selection prompt
+custom_style = Style([
+    ('qmark', 'fg:cyan bold'),      # Use bold cyan for the question mark
+    ('question', 'bold'),
+    ('answer', 'fg:cyan bold'),      # Use bold cyan for answers as well
+    ('pointer', 'fg:cyan bold'),     # Use bold cyan for the pointer
+    ('highlighted', 'fg:cyan bold'), # Use bold cyan when highlighted
+    ('selected', 'fg:cyan'),         # Use cyan for selected items
+    ('separator', 'fg:#6C6C6C'),
+    ('instruction', 'fg:#a3a3a3 italic'),
+    ('text', ''),
+    ('disabled', 'fg:#858585 italic')
+])
+
 console = Console()
 
 def get_property_names():
@@ -279,24 +293,6 @@ def run_pytests():
             console.print("[red]Some tests failed.[/red]")
     except Exception as e:
         console.print(f"[red]Error running pytest: {e}[/red]")
-
-
-
-
-# Define a custom style for the selection prompt
-custom_style = Style([
-    ('qmark', 'fg:cyan bold'),      # Use bold cyan for the question mark
-    ('question', 'bold'),
-    ('answer', 'fg:cyan bold'),      # Use bold cyan for answers as well
-    ('pointer', 'fg:cyan bold'),     # Use bold cyan for the pointer
-    ('highlighted', 'fg:cyan bold'), # Use bold cyan when highlighted
-    ('selected', 'fg:cyan'),         # Use cyan for selected items
-    ('separator', 'fg:#6C6C6C'),
-    ('instruction', 'fg:#a3a3a3 italic'),
-    ('text', ''),
-    ('disabled', 'fg:#858585 italic')
-])
-
 
 
 def main():
