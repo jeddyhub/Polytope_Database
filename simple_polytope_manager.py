@@ -1,6 +1,8 @@
 import os
 import sys
 import subprocess
+import datetime
+import ast
 import networkx as nx
 import graphcalc as gc
 import pandas as pd
@@ -12,14 +14,13 @@ import questionary
 from prompt_toolkit.styles import Style
 import pyfiglet
 
-# Define a custom style for the selection prompt
 custom_style = Style([
-    ('qmark', 'fg:cyan bold'),      # Use bold cyan for the question mark
+    ('qmark', 'fg:cyan bold'),
     ('question', 'bold'),
-    ('answer', 'fg:cyan bold'),      # Use bold cyan for answers as well
-    ('pointer', 'fg:cyan bold'),     # Use bold cyan for the pointer
-    ('highlighted', 'fg:cyan bold'), # Use bold cyan when highlighted
-    ('selected', 'fg:cyan'),         # Use cyan for selected items
+    ('answer', 'fg:cyan bold'),
+    ('pointer', 'fg:cyan bold'),
+    ('highlighted', 'fg:cyan bold'),
+    ('selected', 'fg:cyan'),
     ('separator', 'fg:#6C6C6C'),
     ('instruction', 'fg:#a3a3a3 italic'),
     ('text', ''),
@@ -39,23 +40,17 @@ def get_property_names():
 
 def compute_properties_from_edge_file(name, property_names):
     """
-    Reads a graph from an edgelist file using networkx.read_edgelist,
-    then computes each property using the corresponding function from graphcalc
-    (with networkx as a fallback if needed).
-
-    Returns a dictionary of property values.
+    Reads a graph from an edgelist file and computes properties.
+    (This function is used when initially creating the CSV database.)
     """
     file_path = os.path.join("Simple_Polytope_Data", "Edge_Data", name)
     try:
-        # Read the graph; assume node labels are integers.
         G = nx.read_edgelist(file_path, nodetype=int)
     except Exception as e:
         console.print(f"[red]Error reading {file_path}: {e}[/red]")
         return {}
-
     if G.number_of_nodes() == 0:
         return {}
-
     props = {
         'name': name[:-4],
         'edgelist': [e for e in G.edges()],
@@ -75,31 +70,121 @@ def compute_properties_from_edge_file(name, property_names):
 def recompute_csv_database():
     """
     Recomputes the entire CSV database from all edge list files.
-    A progress bar is shown during processing.
     """
     confirm = Prompt.ask(
-        "[bold yellow]WARNING: This will recompute the entire CSV database and overwrite any existing file. Are you sure you want to proceed? (y/n)[/bold yellow]",
+        "[bold yellow]WARNING: This will recompute the entire CSV database and overwrite any existing file. Proceed? (y/n)[/bold yellow]",
         choices=["y", "n"],
         default="n",
     )
     if confirm != 'y':
         console.print("[red]Operation cancelled.[/red]")
         return
-
     property_names = get_property_names()
     edge_dir = os.path.join("Simple_Polytope_Data", "Edge_Data")
     files = [f for f in os.listdir(edge_dir) if f.endswith(".txt")]
-
     all_data = []
     for filename in track(files, description="Processing edge files..."):
         props = compute_properties_from_edge_file(filename, property_names)
         all_data.append(props)
-
     df = pd.DataFrame(all_data)
     output_csv = os.path.join("Simple_Polytope_Data", "simple_polytope_properties.csv")
     df.to_csv(output_csv, index=False)
     console.print(f"\n[bold green]CSV file '{output_csv}' saved with {len(df)} records.[/bold green]")
 
+# ------------------------------
+# New Helper Functions for Efficiency
+# ------------------------------
+
+def compute_new_property_from_csv_row(row, new_func):
+    """
+    Given a row from the CSV file, extracts the 'edgelist' column,
+    converts it to a list of edges, builds a graph, and computes the property
+    specified by new_func.
+    """
+    edgelist_str = row.get('edgelist', None)
+    if not edgelist_str:
+        return None
+    try:
+        edges = ast.literal_eval(edgelist_str)
+    except Exception as e:
+        console.print(f"[red]Error evaluating edgelist for polytope '{row.get('name', 'unknown')}': {e}[/red]")
+        return None
+    if not edges:
+        return None
+    G = nx.Graph()
+    G.add_edges_from(edges)
+    try:
+        result = getattr(gc, new_func)(G)
+    except Exception:
+        try:
+            result = getattr(nx, new_func)(G)
+        except Exception:
+            result = None
+    return result
+
+def update_csv_with_new_function(new_func):
+    """
+    Loads the existing CSV database, computes the new function's value for each polytope
+    using the edgelist stored in the CSV, adds these values as a new column, and saves the CSV.
+    """
+    csv_path = os.path.join("Simple_Polytope_Data", "simple_polytope_properties.csv")
+    if not os.path.exists(csv_path):
+        console.print("[red]CSV database file not found. Please run a full recompute first.[/red]")
+        return
+    try:
+        df = pd.read_csv(csv_path)
+    except Exception as e:
+        console.print(f"[red]Error reading CSV file: {e}[/red]")
+        return
+    for index, row in df.iterrows():
+        value = compute_new_property_from_csv_row(row, new_func)
+        df.at[index, new_func] = value
+    try:
+        df.to_csv(csv_path, index=False)
+        console.print(f"[green]CSV database updated with new function '{new_func}'.[/green]")
+    except Exception as e:
+        console.print(f"[red]Error writing CSV file: {e}[/red]")
+
+def append_new_function_to_properties_file(properties_file, new_func):
+    """
+    Appends new_func to the properties_file, ensuring that it is placed on its own line.
+    """
+    # Open the file in binary mode for reading/writing.
+    with open(properties_file, "rb+") as f:
+        f.seek(0, os.SEEK_END)
+        if f.tell() > 0:
+            # Go back one character.
+            f.seek(-1, os.SEEK_END)
+            last_char = f.read(1)
+            if last_char != b'\n':
+                f.write(b'\n')
+        # Now write the new function name followed by a newline.
+        f.write((new_func + "\n").encode())
+
+def add_new_function():
+    """
+    Prompts the user to enter the name of a new function (e.g. 'fullerene') to compute on each polytope.
+    The function name is appended to polytope_properties.txt (on its own line), and then the CSV database is updated
+    by computing the new property for each polytope using the existing 'edgelist' column.
+    """
+    properties_file = os.path.join("Simple_Polytope_Data", "polytope_properties.txt")
+    new_func = Prompt.ask("[bold cyan]Enter the name of the new function to add (e.g. 'fullerene')[/bold cyan]").strip()
+    if not new_func:
+        console.print("[red]No function name entered. Aborting.[/red]")
+        return
+    properties = get_property_names()
+    if new_func in properties:
+        console.print(f"[yellow]The function '{new_func}' already exists in polytope_properties.txt[/yellow]")
+        return
+    try:
+        append_new_function_to_properties_file(properties_file, new_func)
+        console.print(f"[green]Function '{new_func}' added successfully to polytope_properties.txt[/green]")
+    except Exception as e:
+        console.print(f"[red]Error updating properties file: {e}[/red]")
+        return
+
+    # Instead of recomputing the entire database, update only the new function in the existing CSV.
+    update_csv_with_new_function(new_func)
 
 
 def add_new_edge_list():
@@ -277,62 +362,163 @@ def display_properties_of_entry():
             console.print(f"[bold]{key}:[/bold] {value}")
 
 
+def remove_property():
+    """
+    Lists current properties from polytope_properties.txt, lets the user select one to remove,
+    then confirms the removal. If the user cancels (by typing "restart" at the selection prompt
+    or answering 'n' at the confirmation prompt), the function returns without making changes.
+    If confirmed, the function removes that property from the file and, if present,
+    drops the corresponding column from the CSV file.
+    """
+    properties_file = os.path.join("Simple_Polytope_Data", "polytope_properties.txt")
+    properties = get_property_names()
+    if not properties:
+        console.print("[red]No properties found in polytope_properties.txt[/red]")
+        return
+
+    console.print(Panel("Available properties:", style="cyan"))
+    for i, prop in enumerate(properties, start=1):
+        console.print(f"[bold blue]{i}[/bold blue]: {prop}")
+
+    choice = Prompt.ask(
+        "[bold cyan]Enter the number of the property to remove (or type 'restart' to cancel)[/bold cyan]"
+    ).strip()
+
+    if choice.lower() == "restart":
+        console.print("[yellow]Operation cancelled. Returning to main menu.[/yellow]")
+        return
+
+    try:
+        index = int(choice) - 1
+        if index < 0 or index >= len(properties):
+            console.print("[red]Invalid selection.[/red]")
+            return
+        prop_to_remove = properties[index]
+    except ValueError:
+        console.print("[red]Please enter a valid number.[/red]")
+        return
+
+    # Confirm removal before proceeding.
+    confirm = Prompt.ask(
+        f"[bold yellow]Are you sure you want to remove property '{prop_to_remove}'? (y/n)[/bold yellow]",
+        choices=["y", "n"],
+        default="n"
+    )
+    if confirm.lower() != "y":
+        console.print("[yellow]Removal cancelled. Returning to main menu.[/yellow]")
+        return
+
+    # Remove the property from the text file.
+    try:
+        with open(properties_file, "r") as f:
+            lines = f.readlines()
+        with open(properties_file, "w") as f:
+            for line in lines:
+                if line.strip() != prop_to_remove:
+                    if not line.endswith("\n"):
+                        line += "\n"
+                    f.write(line)
+        console.print(f"[green]Property '{prop_to_remove}' removed from {properties_file}.[/green]")
+    except Exception as e:
+        console.print(f"[red]Error updating properties file: {e}[/red]")
+        return
+
+    # Remove the column from the CSV database.
+    csv_path = os.path.join("Simple_Polytope_Data", "simple_polytope_properties.csv")
+    if not os.path.exists(csv_path):
+        console.print("[yellow]CSV database not found. No column to remove.[/yellow]")
+        return
+    try:
+        df = pd.read_csv(csv_path)
+        if prop_to_remove in df.columns:
+            df.drop(columns=[prop_to_remove], inplace=True)
+            df.to_csv(csv_path, index=False)
+            console.print(f"[green]Column '{prop_to_remove}' removed from CSV database.[/green]")
+        else:
+            console.print(f"[yellow]Column '{prop_to_remove}' not found in CSV database.[/yellow]")
+    except Exception as e:
+        console.print(f"[red]Error updating CSV file: {e}[/red]")
+
 def run_pytests():
     """
-    Runs pytests on the 'tests' directory and displays the output.
-    If tests fail (nonzero return code), the panel will be red; otherwise, green.
+    Runs pytests on each test file in the 'Simple_Polytope_Data/tests' directory,
+    displaying a progress bar that updates as each test script is run.
+    Aggregates the output and displays it in a panel.
     """
     console.print("[bold cyan]Running pytests on the test directory...[/bold cyan]")
-    try:
-        result = subprocess.run(["pytest", "Simple_Polytope_Data/tests/"], capture_output=True, text=True)
-        # If return code is non-zero, some tests failed.
-        panel_style = "green" if result.returncode == 0 else "red"
-        console.print(Panel(result.stdout, title="Pytest Output", style=panel_style))
-        if result.returncode != 0:
-            console.print("[red]Some tests failed.[/red]")
-    except Exception as e:
-        console.print(f"[red]Error running pytest: {e}[/red]")
+    test_dir = os.path.join("Simple_Polytope_Data", "tests")
+    test_files = [os.path.join(test_dir, f) for f in os.listdir(test_dir)
+                  if f.startswith("test_") and f.endswith(".py")]
+    if not test_files:
+        console.print("[red]No test files found.[/red]")
+        return
 
+    from rich.progress import Progress
+    all_output = ""
+    all_success = True
+    with Progress() as progress:
+        task = progress.add_task("Running tests...", total=len(test_files))
+        for test_file in test_files:
+            result = subprocess.run(["pytest", test_file], capture_output=True, text=True)
+            header = f"\n{'='*10} Output for {os.path.basename(test_file)} {'='*10}\n"
+            all_output += header + result.stdout + "\n"
+            if result.returncode != 0:
+                all_success = False
+            progress.update(task, advance=1)
+    panel_style = "green" if all_success else "red"
+    console.print(Panel(all_output, title="Pytest Output", style=panel_style))
 
 def main():
     """
-    Presents a menu using Questionary with a custom style for arrow-key navigation,
-    while still keeping the aesthetic output from Rich in the rest of the interface.
+    Presents a menu with the following options:
+      1: Recompute the entire CSV database
+      2: Add a new edge list
+      3: Display properties
+      4: Run tests
+      5: Add property (must be callable from GraphCalc or NetworkX)
+      6: Remove property
+      7: Exit
     """
     while True:
-        console = Console()
         title_text = pyfiglet.figlet_format("Polytope Database Manager", font="slant")
         console.print(title_text, style="bold cyan")
         choice = questionary.select(
             "Please select an option:",
             choices=[
-                "A: Recompute the entire CSV database",
-                "B: Add a new edge list to the database",
-                "C: Display properties for a chosen edge list",
-                "D: Run simple polytope tests directory",
-                "E: Exit",
+                "1: Recompute database",
+                "2: Add a new edge list",
+                "3: Display properties",
+                "4: Run tests",
+                "5: Add property (must be callable from GraphCalc or NetworkX)",
+                "6: Remove property",
+                "7: Exit",
             ],
             style=custom_style,
         ).ask()
 
-        if choice.startswith("A"):
+        if choice.startswith("1"):
             recompute_csv_database()
             print()
-        elif choice.startswith("B"):
+        elif choice.startswith("2"):
             add_new_edge_list()
             print()
-        elif choice.startswith("C"):
+        elif choice.startswith("3"):
             display_properties_of_entry()
             print()
-        elif choice.startswith("D"):
+        elif choice.startswith("4"):
             run_pytests()
             print()
-        elif choice.startswith("E"):
+        elif choice.startswith("5"):
+            add_new_function()
+            print()
+        elif choice.startswith("6"):
+            remove_property()
+            print()
+        elif choice.startswith("7"):
             console.print("[bold red]Exiting. Goodbye![/bold red]")
             sys.exit(0)
         else:
             console.print("[red]Invalid option. Please choose a valid option.[/red]")
-
 
 if __name__ == "__main__":
     main()

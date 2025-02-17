@@ -57,39 +57,51 @@ python simple_polytope_manager.py
                          /____/
 
 ? Please select an option: (Use arrow keys)
- » A: Recompute the entire CSV database
-   B: Add a new edge list to the database
-   C: Display properties for a chosen edge list
-   D: Run simple polytope tests directory
-   E: Exit
+ » 1: Recompute database
+   2: Add a new edge list
+   3: Display properties
+   4: Run tests
+   5: Add property (must be callable from GraphCalc or NetworkX)
+   6: Remove property
+   7: Exit
 
 ```
 
 When the script runs, you'll be presented with a menu:
-- **A: Recompute the entire CSV database**
+- **1: Recompute database**
 
 Selecting this option will:
 Prompt you for confirmation (warning that the existing CSV file will be overwritten).
 Process all edge list files from Simple_Polytope_Data/Edge_Data with a progress bar.
 Generate/update the CSV file (simple_polytope_properties.csv).
 
-- **B: Add a new edge list to the database**
+- **2: Add a new edge list**
 
 Selecting this option will:
 Automatically generate the next available file name (e.g., simple_polytope_2.txt).
 Prompt you to enter edges (one per line, either as "source target" or "source, target").
 Type done to finish entering edges or restart at any time to cancel and return to the main menu. After saving, the script computes the properties for the new edge list and displays them. You'll then be asked to confirm whether the computed properties are correct before updating the CSV database.
 
-- **C: Display properties for a chosen edge list**
+- **3: Display properties**
 
 Selecting this option will:
 Display the edge list file names for each known polytope. The user will be prompted to enter in the numerical identifier for a polytope. Thereafter, the program computes all properties of the polytope that are currently being stored.
 
-- **D: Run simple polytope tests directory**
+- **4: Run tests**
 
 Selecting this option will:
 Run all tests in the `Simple_Polytope_Data` directory. Currently, this consists of checking if all edge lists being stored belong to simple polytope graphs.
 
-- **E: Exit**
+- **5: Add property (must be callable from GraphCalc or NetworkX)**
+
+Selecting this option will:
+Prompt the user to enter in the name of a `GraphCalc` or `NetworkX` function to be added to the database being stored.
+
+- **6: Remove property**
+
+Selecting this option will:
+Provide the user with a list of all computable properties of polytopes in the database. The user will then be prompted to select one property to remove.
+
+- **7: Exit**
 
 This option terminates the program.
