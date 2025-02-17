@@ -86,7 +86,7 @@ def recompute_csv_database():
     df.to_csv(output_csv, index=False)
     console.print(f"\n[bold green]CSV file '{output_csv}' saved with {len(df)} records.[/bold green]")
 
-import os
+
 
 def add_new_edge_list():
     """
@@ -140,7 +140,27 @@ def add_new_edge_list():
         console.print("[red]No edges were entered. Aborting.[/red]")
         return
 
-    # Save the new edge list to a file.
+    # -----------------------------
+    # VALIDATE SIMPLE POLYTOPE GRAPH
+    # -----------------------------
+    # Build a NetworkX graph from the entered edges.
+    import networkx as nx
+    try:
+        G = nx.Graph()
+        G.add_edges_from(edges)
+        # Use graphcalc to check that the graph is a simple polytope graph.
+        spg = gc.simple_polytope_graph(G)
+    except Exception as e:
+        console.print(f"[red]Error computing simple polytope graph: {e}[/red]")
+        return
+    # If the returned result is not truthy, the edge list is not valid.
+    if not spg:
+        console.print("[red]The entered edge list does not form a valid simple polytope graph. Please check your input and try again.[/red]")
+        return
+
+    # -----------------------------
+    # SAVE THE EDGE LIST TO A FILE
+    # -----------------------------
     try:
         with open(new_file_path, "w") as f:
             for u, v in edges:
@@ -189,6 +209,7 @@ def add_new_edge_list():
         console.print(f"[bold green]CSV database updated. It now contains {len(df)} records.[/bold green]")
     except Exception as e:
         console.print(f"[red]Error writing CSV file: {e}[/red]")
+
 
 
 def display_properties_of_entry():
