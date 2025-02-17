@@ -36,6 +36,9 @@ python simple_polytope_manager.py
 ```
 
 ## Home Display
+
+When the script runs, you'll be presented with a menu:
+
 ```bash
     ____        __      __
    / __ \____  / /_  __/ /_____  ____  ___
@@ -67,7 +70,7 @@ python simple_polytope_manager.py
 
 ```
 
-When the script runs, you'll be presented with a menu:
+
 - **1: Recompute database**
 
 Selecting this option will:
