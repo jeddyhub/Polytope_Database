@@ -22,6 +22,7 @@ git clone https://github.com/jeddyhub/Polytope_Database.git
 ```bash
 python -m venv .venv
 source .venv/bin/activate
+pip install --upgrade pip
 ```
 
 3. **Install dependencies:**
