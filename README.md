@@ -86,8 +86,10 @@ Selecting this option will:
 Display the edge list file names for each known polytope. The user will be prompted to enter in the numerical identifier for a polytope. Thereafter, the program computes all properties of the polytope that are currently being stored.
 
 - **D: Run simple polytope tests directory**
+
 Selecting this option will:
 Run all tests in the `Simple_Polytope_Data` directory. Currently, this consists of checking if all edge lists being stored belong to simple polytope graphs.
 
 - **E: Exit**
+
 This option terminates the program.
