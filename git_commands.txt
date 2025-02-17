@@ -1,0 +1,15 @@
+
+# To checkout a new branch run this
+git checkout -b <name-of-new-branch>
+
+# to check status run this
+git status
+
+# To add changes run this (add . adds all untracked files)
+git add .
+
+# git commit (-m is for message and is required)
+git commit -m "what you did"
+
+# push to github
+git push
