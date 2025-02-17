@@ -35,6 +35,36 @@ pip install -r requirements.txt
 python simple_polytope_manager.py
 ```
 
+## Home Display
+```bash
+    ____        __      __
+   / __ \____  / /_  __/ /_____  ____  ___
+  / /_/ / __ \/ / / / / __/ __ \/ __ \/ _ \
+ / ____/ /_/ / / /_/ / /_/ /_/ / /_/ /  __/
+/_/    \____/_/\__, /\__/\____/ .___/\___/
+              /____/         /_/
+    ____        __        __
+   / __ \____ _/ /_____ _/ /_  ____ _________
+  / / / / __ `/ __/ __ `/ __ \/ __ `/ ___/ _ \
+ / /_/ / /_/ / /_/ /_/ / /_/ / /_/ (__  )  __/
+/_____/\__,_/\__/\__,_/_.___/\__,_/____/\___/
+
+    __  ___
+   /  |/  /___ _____  ____ _____ ____  _____
+  / /|_/ / __ `/ __ \/ __ `/ __ `/ _ \/ ___/
+ / /  / / /_/ / / / / /_/ / /_/ /  __/ /
+/_/  /_/\__,_/_/ /_/\__,_/\__, /\___/_/
+                         /____/
+
+? Please select an option: (Use arrow keys)
+ » A: Recompute the entire CSV database
+   B: Add a new edge list to the database
+   C: Display properties for a chosen edge list
+   D: Run simple polytope tests directory
+   E: Exit
+
+```
+
 When the script runs, you'll be presented with a menu:
 - **A: Recompute the entire CSV database**
 
