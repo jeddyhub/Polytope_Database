@@ -1,2 +1,7 @@
 .venv
 .pytest_cache
+# Ignore Python cache directories
+__pycache__/
+*.pyc
+*.pyo
+
