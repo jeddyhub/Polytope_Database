@@ -301,7 +301,8 @@ def add_new_edge_list():
         console.print(f"[yellow]Polytope '{polytope_name}' already exists in the CSV database. Overwriting the record.[/yellow]")
         df = df[df['name'] != polytope_name]
 
-    df = df.append(new_props, ignore_index=True)
+    # df = df.append(new_props, ignore_index=True)
+    df = pd.concat([df, pd.DataFrame([new_props])], ignore_index=True)
     try:
         df.to_csv(csv_path, index=False)
         console.print(f"[bold green]CSV database updated. It now contains {len(df)} records.[/bold green]")
