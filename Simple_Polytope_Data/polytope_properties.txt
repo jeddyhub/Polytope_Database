@@ -17,3 +17,4 @@ zero_adjacency_eigenvalues_count
 second_largest_adjacency_eigenvalue
 largest_laplacian_eigenvalue
 smallest_adjacency_eigenvalue
+fullerene
