@@ -853,7 +853,6 @@ def git_github_interface():
                 committed = True
             else:
                 console.print(f"[red]Error committing changes: {result_commit.stderr}[/red]")
-
         elif choice.startswith("4"):
             if not committed:
                 console.print("[red]No committed changes to push. Please add and commit changes first.[/red]")
@@ -865,6 +864,7 @@ def git_github_interface():
             if not push_confirm:
                 continue
 
+            # Get the current branch name.
             result_branch = subprocess.run(
                 ["git", "rev-parse", "--abbrev-ref", "HEAD"],
                 capture_output=True, text=True
@@ -874,12 +874,21 @@ def git_github_interface():
                 continue
 
             current_branch = result_branch.stdout.strip()
-            if branch_created:
+
+            # Check if the branch has an upstream.
+            result_upstream = subprocess.run(
+                ["git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"],
+                capture_output=True, text=True
+            )
+
+            if result_upstream.returncode != 0:
+                # No upstream branch set; push with --set-upstream.
                 result_push = subprocess.run(
                     ["git", "push", "--set-upstream", "origin", current_branch],
                     capture_output=True, text=True
                 )
             else:
+                # Upstream branch exists; do a normal push.
                 result_push = subprocess.run(
                     ["git", "push"],
                     capture_output=True, text=True
