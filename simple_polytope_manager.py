@@ -16,6 +16,9 @@ import tempfile
 from prompt_toolkit.styles import Style
 import pyfiglet
 
+# Global variable to store backup location.
+backup_folder = None
+
 custom_style = Style([
     ('qmark', 'fg:cyan bold'),
     ('question', 'bold'),
@@ -673,14 +676,6 @@ def run_pytests():
     panel_style = "green" if process.returncode == 0 else "red"
     console.print(Panel(all_output, title="Pytest Output", style=panel_style))
 
-
-
-
-# console = Console()
-
-# Global variable to store backup location.
-backup_folder = None
-
 def create_backup():
     """
     Creates backups of files/directories that might be modified during the session.
@@ -962,8 +957,6 @@ def git_github_interface():
         elif choice.startswith("7"):
             console.print("[cyan]Returning to main menu.[/cyan]")
             break
-
-console = Console()
 
 # Example of integrating into your main function:
 def main():
