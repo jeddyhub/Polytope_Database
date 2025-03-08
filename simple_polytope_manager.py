@@ -11,6 +11,8 @@ from rich.prompt import Prompt
 from rich.panel import Panel
 from rich.progress import track
 import questionary
+import shutil
+import tempfile
 from prompt_toolkit.styles import Style
 import pyfiglet
 
@@ -21,6 +23,20 @@ custom_style = Style([
     ('pointer', 'fg:cyan bold'),
     ('highlighted', 'fg:cyan bold'),
     ('selected', 'fg:cyan'),
+    ('separator', 'fg:#6C6C6C'),
+    ('instruction', 'fg:#a3a3a3 italic'),
+    ('text', ''),
+    ('disabled', 'fg:#858585 italic')
+])
+
+
+git_custom_style = Style([
+    ('qmark', 'fg:magenta bold'),
+    ('question', 'bold fg:magenta'),
+    ('answer', 'fg:magenta bold'),
+    ('pointer', 'fg:magenta bold'),
+    ('highlighted', 'fg:magenta bold'),
+    ('selected', 'fg:magenta'),
     ('separator', 'fg:#6C6C6C'),
     ('instruction', 'fg:#a3a3a3 italic'),
     ('text', ''),
@@ -658,14 +674,7 @@ def run_pytests():
     console.print(Panel(all_output, title="Pytest Output", style=panel_style))
 
 
-import os
-import shutil
-import tempfile
-import sys
-import pyfiglet
-import questionary
-from rich.console import Console
-from rich.panel import Panel
+
 
 # console = Console()
 
@@ -733,14 +742,6 @@ def reset_session():
 
     console.print("[green]Session has been reset to its original state.[/green]")
 
-
-import subprocess
-import questionary
-from rich.console import Console
-from rich.panel import Panel
-
-console = Console()
-
 def switch_branch():
     """
     Lists all branches and prompts the user to select one.
@@ -763,7 +764,7 @@ def switch_branch():
     selected_branch = questionary.select(
         "Select a branch to switch to:",
         choices=branches,
-        style=custom_style,
+        style=git_custom_style,
     ).ask()
 
     if not selected_branch:
@@ -806,7 +807,7 @@ def git_github_interface():
                 "6: Show current branch",
                 "7: Return to main menu",
             ],
-            style=custom_style,
+            style=git_custom_style,
         ).ask()
 
         if choice.startswith("1"):
@@ -950,13 +951,6 @@ def git_github_interface():
         elif choice.startswith("7"):
             console.print("[cyan]Returning to main menu.[/cyan]")
             break
-
-
-
-import subprocess
-import questionary
-from rich.console import Console
-from rich.panel import Panel
 
 console = Console()
 
