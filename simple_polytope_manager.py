@@ -793,9 +793,10 @@ def git_github_interface():
     """
     committed = False
     branch_created = False
-    title_text = pyfiglet.figlet_format("Git Manager", font="slant")
-    console.print(title_text, style="bold cyan")
+
     while True:
+        title_text = pyfiglet.figlet_format("Git Manager", font="slant")
+        console.print(title_text, style="bold cyan")
         choice = questionary.select(
             "Select a Git/GitHub action:",
             choices=[
@@ -811,9 +812,13 @@ def git_github_interface():
         ).ask()
 
         if choice.startswith("1"):
+            # Create branch: allow user to cancel by typing "cancel"
             branch_name = questionary.text(
-                "Enter branch name (e.g., feature/new-feature):"
+                "Enter branch name (e.g., feature/new-feature) (or type 'cancel' to abort):"
             ).ask()
+            if branch_name.lower() == "cancel":
+                console.print("[yellow]Branch creation canceled.[/yellow]")
+                continue
             if not branch_name or " " in branch_name:
                 console.print("[red]Invalid branch name. Please try again.[/red]")
                 continue
@@ -832,7 +837,13 @@ def git_github_interface():
             switch_branch()
 
         elif choice.startswith("3"):
-            commit_message = questionary.text("Enter commit message:").ask()
+            # Add and commit changes: allow user to cancel by typing "cancel"
+            commit_message = questionary.text(
+                "Enter commit message (or type 'cancel' to abort):"
+            ).ask()
+            if commit_message.lower() == "cancel":
+                console.print("[yellow]Add and commit canceled.[/yellow]")
+                continue
             if not commit_message:
                 console.print("[red]Commit message cannot be empty.[/red]")
                 continue
@@ -960,10 +971,10 @@ def main():
     Main menu for the Polytope Database Manager.
     Now includes a Git/GitHub option.
     """
-    title_text = pyfiglet.figlet_format("Polytope Database Manager", font="slant")
-    console.print(title_text, style="bold cyan")
-    while True:
 
+    while True:
+        title_text = pyfiglet.figlet_format("Polytope Database Manager", font="slant")
+        console.print(title_text, style="bold cyan")
         choice = questionary.select(
             "Please select an option:",
             choices=[
