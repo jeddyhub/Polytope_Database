@@ -970,7 +970,7 @@ def main():
                 "4: Run tests",
                 "5: Add property (callable from GraphCalc or NetworkX)",
                 "6: Remove property",
-                "7: Git Manager",
+                "7: Git/GitHub interface",
                 "8: Exit",
             ],
             style=custom_style,
