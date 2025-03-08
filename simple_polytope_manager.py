@@ -15,6 +15,7 @@ import shutil
 import tempfile
 from prompt_toolkit.styles import Style
 import pyfiglet
+import re
 
 # Global variable to store backup location.
 backup_folder = None
@@ -89,7 +90,7 @@ def compute_properties_from_edge_file(name, property_names):
         return {}
     if G.number_of_nodes() == 0:
         return {}
-    props = compute_properties(G, property_names)
+    props = compute_properties(G)
     props['name'] = name[:-4]  # Remove the .txt extension.
     return props
 
@@ -984,22 +985,35 @@ def main():
         ).ask()
 
         if choice.startswith("1"):
-            # recompute_csv_database() – your existing function
-            console.print("[cyan]Recomputing database...[/cyan]")
+            recompute_csv_database()
+            print()
         elif choice.startswith("2"):
-            # Your edge list functions (manual or paste)
-            console.print("[cyan]Adding a new edge list...[/cyan]")
+            # New sub-menu for edge list input method.
+            entry_choice = questionary.select(
+                "How would you like to enter the edge list?",
+                choices=[
+                    "Manual entry (enter one edge per line)",
+                    "Paste entire edge list",
+                ],
+                style=custom_style,
+            ).ask()
+            if entry_choice.startswith("Manual"):
+                add_new_edge_list()
+            elif entry_choice.startswith("Paste"):
+                add_new_edge_list_from_paste()
+            print()
         elif choice.startswith("3"):
-            # display_properties_of_entry() – your existing function
-            console.print("[cyan]Displaying properties...[/cyan]")
+            display_properties_of_entry()
+            print()
         elif choice.startswith("4"):
-            # run_pytests() – your existing function
-            console.print("[cyan]Running tests...[/cyan]")
+            run_pytests()
+            print()
         elif choice.startswith("5"):
-            # add_new_function() – your existing function
-            console.print("[cyan]Adding property function...[/cyan]")
+            add_new_function()
+            print()
         elif choice.startswith("6"):
-            # remove_property() – your existing function
+            remove_property()
+            print()
             console.print("[cyan]Removing property...[/cyan]")
         elif choice.startswith("7"):
             # Call the Git/GitHub interface
