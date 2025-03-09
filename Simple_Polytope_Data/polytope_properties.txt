@@ -19,3 +19,10 @@ largest_laplacian_eigenvalue
 smallest_adjacency_eigenvalue
 fullerene
 harmonic_index
+domination_number
+total_domination_number
+is_at_free
+connected_and_bipartite
+wiener_index
+schultz_index
+gutman_index
