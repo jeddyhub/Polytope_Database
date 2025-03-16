@@ -590,7 +590,6 @@ def conjecture_mode(console):
             graffiti.set_complexity(avoid_columns=target_property, max_complexity=1)
             console.print(f"[bold cyan]Complexity level increased.[/bold cyan]")
 
-
         boolean_properties = graffiti.boolean_columns
 
         # prompt the user to conjecture, to start over, or to exit back to the main menu.
@@ -604,8 +603,6 @@ def conjecture_mode(console):
                 ],
                 style=custom_style,
             ).ask()
-
-
 
             if perform_conjecture == f"Conjecture on {target_property[0]}":
                 # prompt the user to select the number of searches to perform.
