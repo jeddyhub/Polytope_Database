@@ -1,5 +1,8 @@
 from graffitiai import GraffitiAI
 from pyfiglet import Figlet
+from rich.panel import Panel
+from rich.prompt import Prompt
+from questionary import select
 import questionary
 
 from polytope_app.utils import custom_style
@@ -10,288 +13,148 @@ __all__ = [
     'conjecture_mode',
 ]
 
-
 def convert_hypothesis(hypothesis):
 
-    if hypothesis == "None":
-        return "simple polytope graph"
-    elif hypothesis == "simple_polytope_graph":
+    if hypothesis == "simple_polytope_graph":
         return "simple polytope graph"
     elif hypothesis == "connected_and_bipartite":
         return "simple polytope graph without odd cycles"
     elif hypothesis == "simple_polytope_graph_with_p6_greater_than_zero":
         return "simple polytope graph with p_6 > 0"
-    elif hypothesis == "is_at_free ":
+    elif hypothesis == "is_at_free":
         return "simple asteroidal triple free polytope graph"
     elif hypothesis == "simple_polytope_graph_with_p6_zero":
         return "simple polytope graph with p_6 = 0"
     elif hypothesis == "zeros_clustered(p_vector)":
         return "simple polytope graph with clustered zeros in p_vector"
     else:
-        return ""
+        return hypothesis
+
+def view_conjectures(agent, target_invariants=None, search=True, console=None):
+    """
+    Interactively view conjectures for the given target invariant(s).
+
+    The user first selects a target invariant, then scrolls through the conjecture
+    summaries (for equal, upper, and lower conjectures). Upon selection, detailed
+    information is displayed in a Rich Panel with bold magenta and green formatting.
+
+    Args:
+        agent: The object containing conjectures and, optionally, the knowledge_table.
+        target_invariants (list, optional): A list of target invariants to display. If None,
+            all keys from agent.conjectures are used.
+        search (bool): Whether to show additional details from the agent's knowledge table.
+        console: A Rich Console instance for output.
+    """
 
 
-def write_on_the_wall(agent, target_invariants, search=True):
-        """
-        Display generated upper and lower conjectures for specified target invariants,
-        with a more detailed and user-friendly view, including:
-        - Percentage of hypothesis objects that are sharp.
-        - Neatly formatted sharp instances in columns.
-        - Analysis of common properties among the sharp instances (if any exist).
+    # Helper to format sharp instances into columns.
+    def format_sharp_instances(instances, num_columns=4, indent="    "):
+        items = sorted(str(item) for item in instances)
+        if not items:
+            return ""
+        max_width = max(len(item) for item in items)
+        rows = (len(items) + num_columns - 1) // num_columns
+        formatted_rows = []
+        for row in range(rows):
+            row_items = []
+            for col in range(num_columns):
+                idx = col * rows + row
+                if idx < len(items):
+                    row_items.append(items[idx].ljust(max_width))
+            formatted_rows.append(indent + "   ".join(row_items))
+        return "\n".join(formatted_rows)
 
-        Args:
-            target_invariants (list, optional): List of target invariants to display.
-                If None, displays conjectures for all invariants.
+    # Select a target invariant if more than one is provided.
+    if target_invariants is None:
+        target_invariants = list(agent.conjectures.keys())
+    if len(target_invariants) > 1:
+        target = select("Select a target invariant:", choices=target_invariants).ask()
+    else:
+        target = target_invariants[0]
 
-        Example:
-            >>> ai.write_on_the_wall(target_invariants=['independence_number'])
-        """
-        fig = Figlet(font='slant')
+    conj_data = agent.conjectures.get(target, {})
+    equal_conj = conj_data.get("equals", [])
+    upper_conj = conj_data.get("upper", [])
+    lower_conj = conj_data.get("lower", [])
 
-        # Helper: Get subset of rows corresponding to sharp instances.
-        def get_sharp_subset(df, sharp_ids):
-            """
-            If 'name' is a column in df, filter rows where df['name'] is in sharp_ids;
-            otherwise, assume sharp_ids are indices.
-            """
-            if 'name' in df.columns:
-                return df[df['name'].isin(sharp_ids)]
-            else:
-                return df.loc[sharp_ids]
+    # Build a list of conjecture entries with summary labels.
+    entries = []
+    def add_entries(conj_list, conj_type):
+        for i, conj in enumerate(conj_list, start=1):
+            hypothesis = convert_hypothesis(conj.hypothesis)
+            conclusion = conj._set_conclusion()
+            statement = f"For any {hypothesis}, {conclusion}."
+            label = f"[bold]{conj_type} Conjecture {i}:[/bold] {statement}"
+            entries.append({
+                "label": label,
+                "conj": conj,
+                "type": conj_type,
+                "index": i
+            })
+    if equal_conj:
+        add_entries(equal_conj, "Equal")
+    if upper_conj:
+        add_entries(upper_conj, "Upper")
+    if lower_conj:
+        add_entries(lower_conj, "Lower")
 
-        # Helper: Format a list of sharp instances into columns.
-        def format_sharp_instances(instances, num_columns=4, indent="    "):
-            items = sorted(str(item) for item in instances)
-            if not items:
-                return ""
-            max_width = max(len(item) for item in items)
-            rows = (len(items) + num_columns - 1) // num_columns
-            formatted_rows = []
-            for row in range(rows):
-                row_items = []
-                for col in range(num_columns):
-                    idx = col * rows + row
-                    if idx < len(items):
-                        row_items.append(items[idx].ljust(max_width))
-                formatted_rows.append(indent + "   ".join(row_items))
-            return "\n".join(formatted_rows)
+    if not entries:
+        console.print("[bold red]No conjectures generated for this target invariant.[/bold red]")
+        return
 
-        # Helper: Find common constant boolean properties.
-        def find_common_boolean_properties(df, sharp_ids, boolean_columns):
-            subset = get_sharp_subset(df, sharp_ids)
-            common_props = {}
-            for col in boolean_columns:
-                unique_vals = subset[col].unique()
-                if len(unique_vals) == 1:
-                    common_props[col] = unique_vals[0]
-            return common_props
+    # Let the user select a conjecture to view in detail.
+    choices = [entry["label"] for entry in entries]
+    selected_label = select("Select a conjecture to view details:", choices=choices + ["Exit"]).ask()
+    if selected_label == "Exit":
+        return
 
-        # Helper: Find common numeric properties.
-        def find_common_numeric_properties(df, sharp_ids, numeric_columns):
-            subset = get_sharp_subset(df, sharp_ids)
-            common_props = {}
-            for col in numeric_columns:
-                values = subset[col].dropna()
-                props = []
-                if (values == 0).all():
-                    props.append("all zero")
-                # if (values != 0).all():
-                #     props.append("all nonzero")
-                # Check even/odd if the column is integer-like.
-                # if pd.api.types.is_integer_dtype(values) or all(float(v).is_integer() for v in values):
-                #     if (values % 2 == 0).all():
-                #         props.append("even")
-                #     if (values % 2 == 1).all():
-                #         props.append("odd")
-                common_props[col] = props
-            return common_props
+    selected_entry = next((entry for entry in entries if entry["label"] == selected_label), None)
+    if not selected_entry:
+        console.print("[red]Invalid selection.[/red]")
+        return
 
-        # Print a fancy title.
-        title = fig.renderText("Graffiti AI")
-        print(title)
-        print("Author: Randy R. Davila, PhD")
-        print("Automated Conjecturing since 2017")
-        print("=" * 80)
-        print()
+    conj = selected_entry["conj"]
+    # Build detailed information.
+    hypothesis = convert_hypothesis(conj.hypothesis)
+    conclusion = conj._set_conclusion()
+    details_lines = []
+    details_lines.append(f"[bold magenta]Statement:[/bold magenta] For any [bold green]{hypothesis}[/bold green], [bold green]{conclusion}[/bold green].")
+    details_lines.append(f"[bold magenta]Target Invariant:[/bold magenta] {conj.target}")
+    details_lines.append(f"[bold magenta]Bound Type:[/bold magenta] {conj.bound_type}")
+    if hasattr(conj, 'complexity') and conj.complexity is not None:
+        details_lines.append(f"[bold magenta]Complexity:[/bold magenta] {conj.complexity}")
+    if conj.touch > 0:
+        if conj.touch > 1:
+            details_lines.append(f"[bold magenta]Sharp on:[/bold magenta] {conj.touch} objects.")
+        else:
+            details_lines.append(f"[bold magenta]Sharp on:[/bold magenta] 1 object.")
+    else:
+        details_lines.append(f"[bold magenta]Inequality is strict.[/bold magenta]")
+    if hasattr(conj, 'sharp_instances') and conj.sharp_instances:
+        details_lines.append(f"[bold magenta]Sharp Instances:[/bold magenta]")
+        details_lines.append(format_sharp_instances(conj.sharp_instances))
+    # Optionally, include percentage info from the knowledge table.
+    if hasattr(agent, 'knowledge_table') and conj.hypothesis in agent.knowledge_table.columns:
+        hyp_df = agent.knowledge_table[agent.knowledge_table[conj.hypothesis] == True]
+        total_hyp = len(hyp_df)
+        if total_hyp > 0:
+            percent_sharp = 100 * conj.touch / total_hyp
+            details_lines.append(f"[bold magenta]Percentage of hypothesis objects that are sharp:[/bold magenta] {percent_sharp:.1f}%")
+        else:
+            details_lines.append(f"[bold magenta]No objects satisfy the hypothesis.[/bold magenta]")
+    details = "\n".join(details_lines)
 
-        if not hasattr(agent, 'conjectures') or not agent.conjectures:
-            print("No conjectures generated yet!")
-            return
+    # Display details in a Panel.
+    panel = Panel(details,
+                  title=f"[bold magenta]{selected_entry['type']} Conjecture {selected_entry['index']} Details[/bold magenta]",
+                  style="magenta")
+    console.print(panel)
 
-        # Use all available target invariants if none are provided.
-        if target_invariants is None:
-            target_invariants = list(agent.conjectures.keys())
+    # Wait for user input before returning to the list.
+    Prompt.ask("Press Enter to return to the conjecture list")
+    # Recursively show the list again for the same target invariant.
+    view_conjectures(agent, target_invariants=[target], search=search, console=console)
 
-        # Iterate through each target invariant.
-        for target in target_invariants:
-            conj_data = agent.conjectures.get(target, {})
-            upper_conj = conj_data.get("upper", [])
-            lower_conj = conj_data.get("lower", [])
-            equal_conj = conj_data.get("equals", [])
-
-            print(f"Target Invariant: {target}")
-            print("-" * 40)
-
-            # Display equal conjectures if any exist.
-            if equal_conj:
-                print("\nEqual Conjectures:")
-                for i, conj in enumerate(equal_conj, start=1):
-                    print(f"\nConjecture {i}:")
-                    print("------------")
-                    hypothesis = convert_hypothesis(conj.hypothesis)
-                    conclusion = conj._set_conclusion()
-                    statement = f"For any {hypothesis}, {conclusion}."
-                    print(f"Statement: {statement}")
-                    # print(f"Statement: {conj.full_expr}")
-                    print("Details:")
-                    # print(f"  Keywords:")
-                    # for keyword in conj.keywords:
-                    #     print(f"    {keyword}")
-                    print(f"  Target Invariant: {conj.target}")
-                    print(f"  Bound Type: {conj.bound_type}")
-                    print(f"  Hypothesis: Any {hypothesis}")
-                    print(f"  Conclusion: {conj._set_conclusion()}")
-
-            # Display Upper Bound Conjectures.
-            print("\nUpper Bound Conjectures:")
-            if upper_conj:
-                for i, conj in enumerate(upper_conj, start=1):
-                    if conj.touch > 0 and i < 10:
-                        print(f"\nConjecture {i}:")
-                        print("------------")
-                        # print(f"Statement: {conj.full_expr}")
-                        hypothesis = convert_hypothesis(conj.hypothesis)
-                        conclusion = conj._set_conclusion()
-                        statement = f"For any {hypothesis}, {conclusion}."
-                        print(f"Statement: {statement}")
-                        print("Details:")
-                        # print(f"  Keywords:")
-                        # for keyword in conj.keywords:
-                        #     print(f"    {keyword}")
-                        print(f"  Target Invariant: {conj.target}")
-                        print(f"  Bound Type: {conj.bound_type}")
-                        print(f"  Hypothesis: Any {hypothesis}")
-                        print(f"  Conclusion: {conj._set_conclusion()}")
-                        if hasattr(conj, 'complexity') and conj.complexity is not None:
-                            print(f"  Complexity: {conj.complexity}")
-                        if conj.touch > 0:
-                            if conj.touch > 1:
-                                print(f"  Sharp on {conj.touch} objects.")
-                            else:
-                                print("  Sharp on 1 object.")
-                        else:
-                            print("  Inequality is strict.")
-                        if hasattr(conj, 'sharp_instances') and conj.sharp_instances:
-                            print("  Sharp Instances:")
-                            print(format_sharp_instances(conj.sharp_instances, num_columns=4))
-                            if search:
-                                # If knowledge_table is available, analyze common properties.
-                                if hasattr(agent, 'knowledge_table'):
-                                    sharp_ids = list(conj.sharp_instances)
-                                    common_bool = (find_common_boolean_properties(agent.knowledge_table, sharp_ids, agent.boolean_columns)
-                                                if hasattr(agent, 'boolean_columns') else {})
-                                    common_numeric = (find_common_numeric_properties(agent.knowledge_table, sharp_ids, agent.original_numerical_columns)
-                                                    if hasattr(agent, 'numerical_columns') else {})
-                                    # common_ineq = (find_common_inequalities(agent.knowledge_table, sharp_ids, agent.numerical_columns)
-                                    #             if hasattr(agent, 'numerical_columns') else [])
-                                    if common_bool or common_numeric:
-                                        print("  Common properties among sharp instances:")
-                                        if common_bool:
-                                            print("    Constant boolean columns:")
-                                            for col, val in common_bool.items():
-                                                print(f"      {col} == {val}")
-
-                                        if common_numeric:
-                                            print("    Common numeric properties:")
-                                            for col, props in common_numeric.items():
-                                                if props:
-                                                    print(f"      {col}: {', '.join(props)}")
-                                        else:
-                                            print("    Common numeric properties:")
-                                            print("      None")
-                                    else:
-                                        print("  No common properties found among sharp instances.")
-                        # Calculate and display the percentage of hypothesis objects that are sharp.
-                        if hasattr(agent, 'knowledge_table') and conj.hypothesis in agent.knowledge_table.columns:
-                            hyp_df = agent.knowledge_table[agent.knowledge_table[conj.hypothesis] == True]
-                            total_hyp = len(hyp_df)
-                            if total_hyp > 0:
-                                percent_sharp = 100 * conj.touch / total_hyp
-                                print(f"  Percentage of hypothesis objects that are sharp: {percent_sharp:.1f}%")
-                            else:
-                                print("  No objects satisfy the hypothesis.")
-                else:
-                    print("  None")
-
-            # Display Lower Bound Conjectures.
-            print("\nLower Bound Conjectures:")
-            if lower_conj:
-                for i, conj in enumerate(lower_conj, start=1):
-                    if conj.touch > 0 and i < 10:
-                        print(f"\nConjecture {i}:")
-                        print("------------")
-                        hypothesis = convert_hypothesis(conj.hypothesis)
-                        conclusion = conj._set_conclusion()
-                        statement = f"For any {hypothesis}, {conclusion}."
-                        print(f"Statement: {statement}")
-                        # print(f"Statement: {conj.full_expr}")
-                        print("Details:")
-                        print(f"  Keywords:")
-                        # for keyword in conj.keywords:
-                        #     print(f"    {keyword}")
-                        print(f"  Target Invariant: {conj.target}")
-                        print(f"  Bound Type: {conj.bound_type}")
-                        print(f"  Hypothesis: Any {hypothesis}")
-                        print(f"  Conclusion: {conj._set_conclusion()}")
-                        if hasattr(conj, 'complexity') and conj.complexity is not None:
-                            print(f"  Complexity: {conj.complexity}")
-                        if conj.touch > 0:
-                            if conj.touch > 1:
-                                print(f"  Sharp on {conj.touch} objects.")
-                            else:
-                                print("  Sharp on 1 object.")
-                        else:
-                            print("  Inequality is strict.")
-                        if hasattr(conj, 'sharp_instances') and conj.sharp_instances:
-                            print("  Sharp Instances:")
-                            print(format_sharp_instances(conj.sharp_instances, num_columns=4))
-                            if search:
-                                if hasattr(agent, 'knowledge_table'):
-                                    sharp_ids = list(conj.sharp_instances)
-                                    common_bool = (find_common_boolean_properties(agent.knowledge_table, sharp_ids, agent.boolean_columns)
-                                                if hasattr(agent, 'boolean_columns') else {})
-                                    common_numeric = (find_common_numeric_properties(agent.knowledge_table, sharp_ids, agent.original_numerical_columns)
-                                                    if hasattr(agent, 'numerical_columns') else {})
-                                    # common_ineq = (find_common_inequalities(agent.knowledge_table, sharp_ids, agent.numerical_columns)
-                                    #             if hasattr(agent, 'numerical_columns') else [])
-                                    if common_bool or common_numeric:
-                                        print("  Common properties among sharp instances:")
-                                        if common_bool:
-                                            print("    Constant boolean columns:")
-                                            for col, val in common_bool.items():
-                                                print(f"      {col} == {val}")
-                                        if common_numeric:
-                                            print("    Common numeric properties:")
-                                            for col, props in common_numeric.items():
-                                                if props:
-                                                    print(f"      {col}: {', '.join(props)}")
-                                        else:
-                                            print("    Common numeric properties:")
-                                            print("      None")
-                                    else:
-                                        print("  No common properties found among sharp instances.")
-                        if hasattr(agent, 'knowledge_table') and conj.hypothesis in agent.knowledge_table.columns:
-                            hyp_df = agent.knowledge_table[agent.knowledge_table[conj.hypothesis] == True]
-                            total_hyp = len(hyp_df)
-                            if total_hyp > 0:
-                                percent_sharp = 100 * conj.touch / total_hyp
-                                print(f"  Percentage of hypothesis objects that are sharp: {percent_sharp:.1f}%")
-                            else:
-                                print("  No objects satisfy the hypothesis.")
-                else:
-                    print("  None")
-
-            print("\n" + "=" * 80 + "\n")
 
 def probability_distribution(target, df, num_features=4):
     import random
@@ -327,6 +190,361 @@ def probability_distribution(target, df, num_features=4):
         weights=prob_dist.values,
         k=num_features,
     )))
+
+def write_on_the_wall2(agent, target_invariants=None, search=True, console=None):
+    """
+    Interactively view conjectures for a target invariant.
+
+    First, the user selects the target invariant (if multiple exist) and then
+    chooses from three categories: Equals, Upper Bound, or Lower Bound.
+    The user scrolls through a numbered list for the chosen category, and then
+    selects one to view detailed information in a Rich Panel with bold magenta
+    and green formatting.
+
+    Args:
+        agent: The object that contains the conjectures (and optionally a knowledge_table).
+        target_invariants (list, optional): A list of target invariants to consider. If None,
+            all keys from agent.conjectures are used.
+        search (bool): If True, additional search/percentage details are displayed.
+        console: A Rich Console instance for output.
+    """
+    # Ensure we have a console.
+    if console is None:
+        from rich.console import Console
+        console = Console()
+
+    # Display a fancy header.
+    fig = Figlet(font='slant')
+    console.print(fig.renderText("Graffiti AI"), style="bold cyan")
+    console.print("Author: Randy R. Davila, PhD")
+    console.print("Automated Conjecturing since 2017")
+    console.print("=" * 80)
+
+    # If no target invariants were passed, use all available.
+    if target_invariants is None:
+        target_invariants = list(agent.conjectures.keys())
+
+    # Prompt for target invariant selection if more than one exists.
+    if len(target_invariants) > 1:
+        selected_target = select("Select a target invariant:", choices=target_invariants).ask()
+    else:
+        selected_target = target_invariants[0]
+
+    # Get conjecture data for the chosen target.
+    target_data = agent.conjectures.get(selected_target, {})
+
+    # Prompt the user to select a conjecture category.
+    category_choice = select(
+        "Select a conjecture category:",
+        choices=["Equals", "Upper Bounds", "Lower Bounds", "Exit"],
+        style=custom_style,
+    ).ask()
+
+    # Map the user's choice to the key used in agent.conjectures.
+    if category_choice.lower().startswith("equal"):
+        category_key = "equals"
+    elif category_choice.lower().startswith("upper"):
+        category_key = "upper"
+    elif category_choice.lower().startswith("lower"):
+        category_key = "lower"
+    elif category_choice.lower().startswith("exit"):
+        return
+
+    # Retrieve the list of conjectures for the selected category.
+    conj_list = target_data.get(category_key, [])
+    if not conj_list:
+        console.print(f"[red]No {category_choice} conjectures available for target invariant {selected_target}.[/red]")
+        return
+
+    # Build a numbered list of conjecture summaries.
+    choices = []
+    for i, conj in enumerate(conj_list[:10], start=1):
+        # For a simple summary, convert the hypothesis (replacing underscores) and build a statement.
+        hypothesis = convert_hypothesis(conj.hypothesis)
+        conclusion = conj._set_conclusion()
+        statement = f"For any {hypothesis}, {conclusion}."
+        summary = f"{i}: {statement}"
+        choices.append(summary)
+    choices.append("Exit")
+
+    # Let the user select a conjecture summary.
+    selected_summary = select("Select a conjecture to view details:", choices=choices).ask()
+    if selected_summary == "Exit":
+        return
+
+    # Extract the index from the selected summary.
+    try:
+        index = int(selected_summary.split(":")[0]) - 1
+    except (ValueError, IndexError):
+        console.print("[red]Error processing your selection.[/red]")
+        return
+
+    # Get the selected conjecture.
+    selected_conj = conj_list[index]
+
+    # Build detailed information.
+    details = []
+    hypothesis = convert_hypothesis(selected_conj.hypothesis)
+    conclusion = selected_conj._set_conclusion()
+    details.append(f"[bold magenta]Statement:[/bold magenta] For any [bold green]{hypothesis}[/bold green], [bold green]{conclusion}[/bold green].")
+    details.append(f"[bold magenta]Target Invariant:[/bold magenta] {selected_conj.target}")
+    details.append(f"[bold magenta]Bound Type:[/bold magenta] {selected_conj.bound_type}")
+    if hasattr(selected_conj, 'complexity') and selected_conj.complexity is not None:
+        details.append(f"[bold magenta]Complexity:[/bold magenta] {selected_conj.complexity}")
+    if selected_conj.touch > 0:
+        if selected_conj.touch > 1:
+            details.append(f"[bold magenta]Sharp on:[/bold magenta] {selected_conj.touch} objects.")
+        else:
+            details.append(f"[bold magenta]Sharp on:[/bold magenta] 1 object.")
+    else:
+        details.append(f"[bold magenta]Inequality is strict.[/bold magenta]")
+
+    # Helper to format a list of sharp instances into columns.
+    def format_sharp_instances(instances, num_columns=4, indent="    "):
+        items = sorted(str(item) for item in instances)
+        if not items:
+            return ""
+        max_width = max(len(item) for item in items)
+        rows = (len(items) + num_columns - 1) // num_columns
+        formatted_rows = []
+        for row in range(rows):
+            row_items = []
+            for col in range(num_columns):
+                idx = col * rows + row
+                if idx < len(items):
+                    row_items.append(items[idx].ljust(max_width))
+            formatted_rows.append(indent + "   ".join(row_items))
+        return "\n".join(formatted_rows)
+
+    if hasattr(selected_conj, 'sharp_instances') and selected_conj.sharp_instances:
+        details.append(f"[bold magenta]Sharp Instances:[/bold magenta]")
+        details.append(format_sharp_instances(selected_conj.sharp_instances))
+
+    # Optionally, include percentage info from the agent's knowledge table.
+    if search and hasattr(agent, 'knowledge_table') and selected_conj.hypothesis in agent.knowledge_table.columns:
+        hyp_df = agent.knowledge_table[agent.knowledge_table[selected_conj.hypothesis] == True]
+        total_hyp = len(hyp_df)
+        if total_hyp > 0:
+            percent_sharp = 100 * selected_conj.touch / total_hyp
+            details.append(f"[bold magenta]Percentage of hypothesis objects that are sharp:[/bold magenta] {percent_sharp:.1f}%")
+        else:
+            details.append(f"[bold magenta]No objects satisfy the hypothesis.[/bold magenta]")
+
+    # Combine the details into a single text block.
+    details_text = "\n".join(details)
+
+    # Display the details in a Panel.
+    panel = Panel(details_text,
+                  title=f"[bold magenta]{category_choice} Conjecture Details[/bold magenta]",
+                  style="magenta")
+    console.print(panel)
+
+    # Wait for the user to continue.
+    Prompt.ask("Press Enter to return to the conjecture menu")
+
+    # Re-show the conjecture selection menu for the same target invariant.
+    write_on_the_wall2(agent, target_invariants=[selected_target], search=search, console=console)
+
+def write_on_the_wall(agent, target_invariants=None, search=True, console=None):
+    """
+    Interactively view conjectures for a target invariant.
+
+    The user is first prompted to select a target invariant (if more than one exists)
+    and then a conjecture category: Equals, Upper Bound, or Lower Bound.
+
+    After that, the user scrolls through a numbered list of conjecture summaries.
+    When a conjecture is selected, its detailed information is displayed in a Rich Panel.
+    In addition to the basic details (statement, target invariant, bound type, etc.),
+    if the conjecture has sharp instances and the agent's knowledge table is available,
+    the common boolean and numeric properties among the sharp instances are computed
+    and shown.
+
+    Args:
+        agent: An object containing an attribute `conjectures` (and optionally `knowledge_table`,
+               `boolean_columns`, and `numerical_columns`).
+        target_invariants (list, optional): List of target invariants to consider. If None,
+            all keys in agent.conjectures are used.
+        search (bool): If True, additional details (sharp instance percentages and common properties)
+            are included.
+        console: A Rich Console instance for output.
+    """
+    if console is None:
+        from rich.console import Console
+        console = Console()
+
+    # Display header using Figlet.
+    fig = Figlet(font='slant')
+    console.print(fig.renderText("Graffiti AI"), style="bold cyan")
+    console.print("Author: Randy R. Davila, PhD")
+    console.print("Automated Conjecturing since 2017")
+    console.print("=" * 80)
+
+    # Use all available target invariants if none are provided.
+    if target_invariants is None:
+        target_invariants = list(agent.conjectures.keys())
+
+    # Prompt for target invariant selection if more than one exists.
+    if len(target_invariants) > 1:
+        selected_target = select("Select a target invariant:", choices=target_invariants).ask()
+    else:
+        selected_target = target_invariants[0]
+
+    # Prompt the user to select a conjecture category.
+    category_choice = select(
+        "Select a conjecture category:",
+        choices=["Equals", "Upper Bound", "Lower Bound", "Exit"],
+        style=custom_style,
+    ).ask()
+    if category_choice.lower().startswith("equal"):
+        category_key = "equals"
+    elif category_choice.lower().startswith("upper"):
+        category_key = "upper"
+    elif category_choice.lower().startswith("lower"):
+        category_key = "lower"
+    elif category_choice.lower().startswith("exit"):
+        return
+    else:
+        console.print("[red]Invalid category selected.[/red]")
+        return
+
+    # Retrieve the list of conjectures for the selected target and category.
+    conj_list = agent.conjectures.get(selected_target, {}).get(category_key, [])
+    if not conj_list:
+        console.print(f"[red]No {category_choice} conjectures available for target invariant {selected_target}.[/red]")
+        return
+
+    # Build a numbered list of conjecture summaries.
+    choices_list = []
+    for i, conj in enumerate(conj_list[:10], start=1):
+        hypothesis = convert_hypothesis(conj.hypothesis)
+        conclusion = conj._set_conclusion()
+        statement = f"For any {hypothesis}, {conclusion}."
+        summary = f"{i}: {statement}"
+        choices_list.append(summary)
+    choices_list.append("Exit")
+
+    # Let the user select a conjecture summary.
+    selected_summary = select("Select a conjecture to view details:", choices=choices_list, style=custom_style).ask()
+    if selected_summary == "Exit":
+        return
+
+    try:
+        index = int(selected_summary.split(":")[0]) - 1
+    except (ValueError, IndexError):
+        console.print("[red]Error processing your selection.[/red]")
+        return
+    selected_conj = conj_list[index]
+
+    # Build detailed information.
+    details_lines = []
+    hypothesis = convert_hypothesis(selected_conj.hypothesis)
+    conclusion = selected_conj._set_conclusion()
+    details_lines.append(f"[bold magenta]Statement:[bold green] For any [bold green]{hypothesis}[/bold green], [bold green]{conclusion}[/bold green].")
+    details_lines.append(f"[bold magenta]Target Invariant:[/bold magenta] {selected_conj.target}")
+    details_lines.append(f"[bold magenta]Bound Type:[/bold magenta] {selected_conj.bound_type}")
+    if hasattr(selected_conj, 'complexity') and selected_conj.complexity is not None:
+        details_lines.append(f"[bold magenta]Complexity:[/bold magenta] {selected_conj.complexity}")
+    if selected_conj.touch > 0:
+        if selected_conj.touch > 1:
+            details_lines.append(f"[bold magenta]Sharp on:[/bold magenta] {selected_conj.touch} objects.")
+        else:
+            details_lines.append(f"[bold magenta]Sharp on:[/bold magenta] 1 object.")
+    else:
+        details_lines.append(f"[bold magenta]Inequality is strict.[/bold magenta]")
+
+    # --- Helper functions for formatting and common properties ---
+    def get_sharp_subset(df, sharp_ids):
+        if 'name' in df.columns:
+            return df[df['name'].isin(sharp_ids)]
+        else:
+            return df.loc[sharp_ids]
+
+    def format_sharp_instances(instances, num_columns=4, indent="    "):
+        items = sorted(str(item) for item in instances)
+        if not items:
+            return ""
+        max_width = max(len(item) for item in items)
+        rows = (len(items) + num_columns - 1) // num_columns
+        formatted_rows = []
+        for row in range(rows):
+            row_items = []
+            for col in range(num_columns):
+                idx = col * rows + row
+                if idx < len(items):
+                    row_items.append(items[idx].ljust(max_width))
+            formatted_rows.append(indent + "   ".join(row_items))
+        return "\n".join(formatted_rows)
+
+    def find_common_boolean_properties(df, sharp_ids, boolean_columns):
+        subset = get_sharp_subset(df, sharp_ids)
+        common_props = {}
+        for col in boolean_columns:
+            unique_vals = subset[col].unique()
+            if len(unique_vals) == 1:
+                common_props[col] = unique_vals[0]
+        return common_props
+
+    def find_common_numeric_properties(df, sharp_ids, numeric_columns):
+        subset = get_sharp_subset(df, sharp_ids)
+        common_props = {}
+        for col in numeric_columns:
+            values = subset[col].dropna()
+            props = []
+            if (values == 0).all():
+                props.append("all zero")
+            common_props[col] = props
+        return common_props
+    # -----------------------------------------------------------------
+
+    # If sharp instances exist, show them and compute common properties.
+    if hasattr(selected_conj, 'sharp_instances') and selected_conj.sharp_instances:
+        details_lines.append(f"[bold magenta]Sharp Instances:[/bold magenta]")
+        details_lines.append(format_sharp_instances(selected_conj.sharp_instances))
+        if search and hasattr(agent, 'knowledge_table'):
+            sharp_ids = list(selected_conj.sharp_instances)
+            common_bool = {}
+            common_numeric = {}
+            if hasattr(agent, 'boolean_columns'):
+                common_bool = find_common_boolean_properties(agent.knowledge_table, sharp_ids, agent.boolean_columns)
+            if hasattr(agent, 'numerical_columns'):
+                common_numeric = find_common_numeric_properties(agent.knowledge_table, sharp_ids, agent.numerical_columns)
+            if common_bool or common_numeric:
+                details_lines.append(f"[bold magenta]Common properties among sharp instances:[/bold magenta]")
+                if common_bool:
+                    details_lines.append("[bold magenta]Constant boolean columns:[/bold magenta]")
+                    for col, val in common_bool.items():
+                        details_lines.append(f"   {col} == {val}")
+                if common_numeric:
+                    details_lines.append("[bold magenta]Common numeric properties:[/bold magenta]")
+                    for col, props in common_numeric.items():
+                        if props:
+                            details_lines.append(f"   {col}: {', '.join(props)}")
+                        else:
+                            details_lines.append(f"   {col}: None")
+            else:
+                details_lines.append(f"[bold magenta]No common properties found among sharp instances.[/bold magenta]")
+
+    # Optionally, include percentage info from the knowledge table.
+    if search and hasattr(agent, 'knowledge_table') and selected_conj.hypothesis in agent.knowledge_table.columns:
+        hyp_df = agent.knowledge_table[agent.knowledge_table[selected_conj.hypothesis] == True]
+        total_hyp = len(hyp_df)
+        if total_hyp > 0:
+            percent_sharp = 100 * selected_conj.touch / total_hyp
+            details_lines.append(f"[bold magenta]Percentage of hypothesis objects that are sharp:[/bold magenta] {percent_sharp:.1f}%")
+        else:
+            details_lines.append(f"[bold magenta]No objects satisfy the hypothesis.[/bold magenta]")
+
+    details_text = "\n".join(details_lines)
+
+    # Display the details in a Rich Panel.
+    panel = Panel(details_text,
+                  title=f"[bold magenta]{category_choice} Conjecture Details[/bold magenta]",
+                  style="magenta")
+    console.print(panel)
+
+    # Wait for the user and then return to the conjecture menu.
+    Prompt.ask("Press Enter to return to the conjecture menu")
+    write_on_the_wall(agent, target_invariants=[selected_target], search=search, console=console)
 
 def conjecture_mode(console):
     """
@@ -557,9 +775,12 @@ def conjecture_mode(console):
                     )
                 console.print("[bold cyan]Conjecture complete![/bold cyan]")
                 # Display the conjecture results using write on the wall with search = True
-                write_on_the_wall(graffiti, target_invariants=target_property, search=True)
+                # write_on_the_wall(graffiti, target_invariants=target_property, search=True)
+                # view_conjectures(graffiti, target_invariants=target_property, search=True, console=console)
+                write_on_the_wall(graffiti, target_invariants=target_property, search=True, console=console)
 
             elif perform_conjecture == "Start over":
                 break
             else:
                 return
+
