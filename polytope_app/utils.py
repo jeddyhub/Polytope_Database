@@ -164,6 +164,9 @@ def write_on_the_wall(agent, numerical_columns, target_invariants=None, search=T
         statement = f"\n For any {hypothesis}, \n  \n        {conclusion}. \n"
     details_lines.append(f"[bold magenta]Statement: [bold green]{statement}")
     details_lines.append(f"[bold magenta]Target Invariant:[/bold magenta] {selected_conj.target}")
+    # other invariants
+    if hasattr(selected_conj, 'other_invariants') and selected_conj.other_invariants:
+        details_lines.append(f"[bold magenta]Other Invariants:[/bold magenta] {', '.join(selected_conj.other_invariants)}")
     details_lines.append(f"[bold magenta]Bound Type:[/bold magenta] {selected_conj.bound_type}")
     if hasattr(selected_conj, 'complexity') and selected_conj.complexity is not None:
         details_lines.append(f"[bold magenta]Complexity:[/bold magenta] {selected_conj.complexity}")
