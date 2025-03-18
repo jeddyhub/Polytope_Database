@@ -60,59 +60,61 @@ def convert_hypothesis(hypothesis):
 
 def keyword_map(keyword):
     if keyword == 'α':
-        return f'{keyword} (the independence number of the simple polytope graph)'
+        return f'{keyword} -- the independence number of the simple polytope graph.'
     elif keyword == 'β':
-        return f'{keyword} (the vertex cover number of the simple polytope graph)'
+        return f'{keyword} -- the vertex cover number of the simple polytope graph.'
     elif keyword == 'γ':
-        return f'{keyword} (the domination number of the simple polytope graph)'
+        return f'{keyword} -- the domination number of the simple polytope graph.'
     elif keyword == 'γₜ':
-        return f'{keyword} (the total domination number of the simple polytope graph)'
+        return f'{keyword} -- the total domination number of the simple polytope graph.'
     elif keyword == 'μ':
-        return f'{keyword}(the matching number of the simple polytope graph. NOTE: {keyword} is also used for the mean of a list of numbers)'
+        return f'{keyword} -- the matching number of the simple polytope graph. NOTE: {keyword} is also used for the mean of a list of numbers.'
     elif keyword == 'rad':
-        return f'{keyword} (the radius of the simple polytope graph; defined as the minimum eccentricity of any vertex)'
+        return f'{keyword} -- the radius of the simple polytope graph; defined as the minimum eccentricity of any vertex.'
     elif keyword == 'diam':
-        return f'{keyword} (the diameter of the simple polytope graph; defined as the maximum eccentricity of any vertex)'
+        return f'{keyword} -- the diameter of the simple polytope graph; defined as the maximum eccentricity of any vertex.'
     elif keyword == 'g':
-        return f'{keyword} (the girth of the simple polytope graph; defined as the length of the shortest cycle. For simple polytope graphs this is the smallest k such that pₖ > 0)'
+        return f'{keyword} -- the girth of the simple polytope graph; defined as the length of the shortest cycle. For simple polytope graphs this is the smallest k such that pₖ > 0.'
     elif keyword == 'σ²':
-        return f'{keyword} (the variance of the p-vector)'
+        return f'{keyword} -- the variance of the p-vector.'
     elif keyword == 'σ':
-        return f'{keyword} (the standard deviation of the p-vector)'
+        return f'{keyword} -- the standard deviation of the p-vector.'
     elif keyword == 'μ(p₃,..., pₙ)':
-        return f'{keyword} (the mean of the p-vector (p₃,..., pₙ) )'
+        return f'{keyword} -- the mean of the p-vector (p₃,..., pₙ).'
     elif keyword == 'mad(p₃,..., pₙ)':
-        return f'{keyword} (the median absolute deviation of the p-vector)'
+        return f'{keyword} -- the median absolute deviation of the p-vector (p₃,..., pₙ).'
     elif keyword == '|{pₖ : 3 ≤ k ≤ n}|':
-        return f'{keyword} (the number of unique non-zero entries in the p-vector)'
+        return f'{keyword} -- the number of unique non-zero entries in the p-vector (p₃,..., pₙ).'
     elif keyword == '(max{pₖ : 3 ≤ k ≤ n} - min{pₖ : 3 ≤ k ≤ n})':
         return f'{keyword} (the range of the p-vector)'
     elif keyword == 'count_zero(p₃,..., pₙ)':
-        return f'{keyword} (the number of zero entries in the p-vector)'
+        return f'{keyword} -- the number of zero entries in the p-vector (p₃,..., pₙ).'
     elif keyword == 'count_non_zero(p₃,..., pₙ)':
-        return f'{keyword} (the number of non-zero entries in the p-vector)'
+        return f'{keyword} -- the number of non-zero entries in the p-vector (p₃,..., pₙ).'
     elif keyword == 'count_even(p₃,..., pₙ)':
-        return f'{keyword} (the number of even entries in the p-vector)'
+        return f'{keyword} -- the number of even entries in the p-vector (p₃,..., pₙ).'
     elif keyword == 'count_odd(p₃,..., pₙ)':
-        return f'{keyword} (the number of odd entries in the p-vector)'
+        return f'{keyword} -- the number of odd entries in the p-vector (p₃,..., pₙ).'
     elif keyword == 'max(p₃,..., pₙ)':
-        return f'{keyword} (the maximum value in the p-vector)'
+        return f'{keyword} -- the maximum value in the p-vector (p₃,..., pₙ).'
     elif keyword == 'min(p₃,..., pₙ)':
-        return f'{keyword} (the minimum value in the p-vector)'
+        return f'{keyword} -- the minimum value in the p-vector (p₃,..., pₙ).'
     elif keyword == 'median(p₃,..., pₙ)':
-        return f'{keyword} (the median value in the p-vector)'
+        return f'{keyword} -- the median value in the p-vector (p₃,..., pₙ).'
     elif keyword == 'p₃':
-        return f'{keyword} (the number of 3-gons in the simple polytope graph)'
+        return f'{keyword} -- the number of 3-gons in the simple polytope graph.'
     elif keyword == 'p₄':
-        return f'{keyword} (the number of 4-gons in the simple polytope graph)'
+        return f'{keyword} -- the number of 4-gons in the simple polytope graph.'
     elif keyword == 'p₅':
-        return f'{keyword} (the number of 5-gons in the simple polytope graph)'
+        return f'{keyword} -- the number of 5-gons in the simple polytope graph.'
     elif keyword == 'p₆':
-        return f'{keyword} (the number of 6-gons in the simple polytope graph)'
+        return f'{keyword} -- the number of 6-gons in the simple polytope graph.'
     elif keyword == 'p₇':
-        return f'{keyword} (the number of 7-gons in the simple polytope graph)'
+        return f'{keyword} -- the number of 7-gons in the simple polytope graph.'
     elif keyword == '(p₃ + ... + pₙ)':
-        return f'{keyword} (the sum of the p-vector)'
+        return f'{keyword} -- the sum of entries the p-vector (p₃,..., pₙ).'
+    elif keyword == 'n':
+        return f'{keyword} -- the size of a largest gon in the simple polytope graph.'
     else:
         return f'({keyword})'
 
