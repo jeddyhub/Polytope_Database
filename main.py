@@ -24,6 +24,8 @@ def main_menu():
     # Add properties to the knowledge table.
     graffiti.vectorize(['[p₃, p₄, ..., pₙ]'])
     graffiti.add_statistics(['[p₃, p₄, ..., pₙ]'])
+    graffiti.knowledge_table.rename(columns={'order': 'V'}, inplace=True)
+    graffiti.knowledge_table.rename(columns={'size': 'E'}, inplace=True)
     graffiti.knowledge_table.rename(columns={'mostly_zeros([p₃, p₄, ..., pₙ])': 'simple polytope graph with at least 70% of [p₃, p₄, ..., pₙ] equal to zero'}, inplace=True)
     graffiti.knowledge_table.rename(columns={'first_index_half_cumsum([p₃, p₄, ..., pₙ])': 'min{k : p₃ + ... + pₖ ≥ ½ (p₃ + ... + pₙ)}'}, inplace=True)
     graffiti.knowledge_table.rename(columns={'variance([p₃, p₄, ..., pₙ])': 'σ²(p₃, p₄, ..., pₙ)'}, inplace=True)
@@ -32,10 +34,10 @@ def main_menu():
     graffiti.knowledge_table.rename(columns={'min([p₃, p₄, ..., pₙ])': 'min(p₃, p₄, ..., pₙ)'}, inplace=True)
     graffiti.knowledge_table.rename(columns={'mean([p₃, p₄, ..., pₙ])': 'μ(p₃, p₄, ..., pₙ)'}, inplace=True)
     graffiti.knowledge_table.rename(columns={'median_absolute_deviation([p₃, p₄, ..., pₙ])': 'MAD(p₃, p₄, ..., pₙ)'}, inplace=True)
-    graffiti.knowledge_table.rename(columns={'count_even([p₃, p₄, ..., pₙ])': '|{k : pₖ mod 2 = 0}|'}, inplace=True)
-    graffiti.knowledge_table.rename(columns={'count_odd([p₃, p₄, ..., pₙ])': '|{k : pₖ mod 2 > 0}|'}, inplace=True)
-    graffiti.knowledge_table.rename(columns={'count_zero([p₃, p₄, ..., pₙ])': '|{k : pₖ = 0}|'}, inplace=True)
-    graffiti.knowledge_table.rename(columns={'count_non_zero([p₃, p₄, ..., pₙ])': '|{k : pₖ > 0}|'}, inplace=True)
+    graffiti.knowledge_table.rename(columns={'count_even([p₃, p₄, ..., pₙ])': 'count_even(p₃, p₄, ..., pₙ)'}, inplace=True)
+    graffiti.knowledge_table.rename(columns={'count_odd([p₃, p₄, ..., pₙ])': 'count_odd(p₃, p₄, ..., pₙ)'}, inplace=True)
+    graffiti.knowledge_table.rename(columns={'count_zero([p₃, p₄, ..., pₙ])': 'count_zero(p₃, p₄, ..., pₙ)'}, inplace=True)
+    graffiti.knowledge_table.rename(columns={'count_non_zero([p₃, p₄, ..., pₙ])': 'count_non_zero(p₃, p₄, ..., pₙ)'}, inplace=True)
     graffiti.knowledge_table.rename(columns={'unique_count([p₃, p₄, ..., pₙ])': '|{pₖ : 3 ≤ k ≤ n}|'}, inplace=True)
     graffiti.knowledge_table.rename(columns={'range([p₃, p₄, ..., pₙ])': '(max{pₖ : 3 ≤ k ≤ n} - min{pₖ : 3 ≤ k ≤ n})'}, inplace=True)
     graffiti.knowledge_table.rename(columns={'median([p₃, p₄, ..., pₙ])': 'median(p₃, p₄, ..., pₙ)'}, inplace=True)
@@ -45,11 +47,24 @@ def main_menu():
     graffiti.knowledge_table['p₅'] = graffiti.knowledge_table['[p₃, p₄, ..., pₙ]'].apply(lambda x: x[2] if len(x) > 2 else 0)
     graffiti.knowledge_table['p₆'] = graffiti.knowledge_table['[p₃, p₄, ..., pₙ]'].apply(lambda x: x[3] if len(x) > 3 else 0)
     graffiti.knowledge_table['p₇'] = graffiti.knowledge_table['[p₃, p₄, ..., pₙ]'].apply(lambda x: x[4] if len(x) > 4 else 0)
-    graffiti.knowledge_table['p₃ + p₄ + ... + pₙ'] = graffiti.knowledge_table['[p₃, p₄, ..., pₙ]'].apply(lambda x: sum(x))
+    graffiti.knowledge_table['(p₃ + ... + pₙ)'] = graffiti.knowledge_table['[p₃, p₄, ..., pₙ]'].apply(lambda x: sum(x))
     graffiti.knowledge_table['n'] = graffiti.knowledge_table['[p₃, p₄, ..., pₙ]'].apply(lambda x: len(x) + 2)
+    graffiti.knowledge_table['simple polytope graph with p₃ > 0'] = graffiti.knowledge_table['p₃'] > 0
+    graffiti.knowledge_table['simple polytope graph with p₄ > 0'] = graffiti.knowledge_table['p₄'] > 0
+    graffiti.knowledge_table['simple polytope graph with p₅ > 0'] = graffiti.knowledge_table['p₅'] > 0
+    graffiti.knowledge_table['simple polytope graph with p₆ > 0'] = graffiti.knowledge_table['p₆'] > 0
+    graffiti.knowledge_table['simple polytope graph with p₇ > 0'] = graffiti.knowledge_table['p₇'] > 0
+
+    # graffiti.knowledge_table['k with pk > 0'] = graffiti.knowledge_table['[p₃, p₄, ..., pₙ]'].apply(lambda x: [k for k in range(3, len(x) + 3) if x[k - 3] > 0])
+
+    # fullerene's only have p5 and p6 faces. To check this, we check the length of the p-vector is 4 and
+    # the first two entries are zero and the last two entries are non-zero.
+    graffiti.knowledge_table['fullerene'] = (graffiti.knowledge_table['n'] == 6) & (graffiti.knowledge_table['p₃'] == 0) & (graffiti.knowledge_table['p₄'] == 0) & (graffiti.knowledge_table['p₅'] > 0) & (graffiti.knowledge_table['p₆'] > 0)
+
+
 
     # drop the columns that are not needed
-    graffiti.drop_columns(['[p₃, p₄, ..., pₙ]', 'length([p₃, p₄, ..., pₙ])', 'adjacency_matrix', 'size'])
+    graffiti.drop_columns(['[p₃, p₄, ..., pₙ]', 'length([p₃, p₄, ..., pₙ])', 'adjacency_matrix', 'E', 'simple_polytope_graph_with_p6_greater_than_zero'])
 
     # Get numerical columns of the knowledge_table.
     numerical_columns = graffiti.knowledge_table.select_dtypes(include=['number']).columns.tolist()
@@ -69,7 +84,7 @@ def main_menu():
                 "7: Remove Database Property",
                 "8: Git/GitHub",
                 "9: Write on the Wall",
-                "10: View Conjectures Written on the Wall",
+                "10: View the Wall",
                 "11: Exit",
             ],
             style=utils.custom_style,
