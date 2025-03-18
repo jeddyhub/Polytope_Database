@@ -26,6 +26,8 @@ def main_menu():
     graffiti.add_statistics(['[p₃, p₄, ..., pₙ]'])
     graffiti.knowledge_table.rename(columns={'order': 'V'}, inplace=True)
     graffiti.knowledge_table.rename(columns={'size': 'E'}, inplace=True)
+    graffiti.knowledge_table.rename(columns={'simple_polytope_graph_with_p6_zero': 'simple polytope graph with p₆ = 0'}, inplace=True)
+    graffiti.knowledge_table.rename(columns={'simple_polytope_graph': 'simple polytope graph'}, inplace=True)
     graffiti.knowledge_table.rename(columns={'mostly_zeros([p₃, p₄, ..., pₙ])': 'simple polytope graph with at least 70% of [p₃, p₄, ..., pₙ] equal to zero'}, inplace=True)
     graffiti.knowledge_table.rename(columns={'first_index_half_cumsum([p₃, ..., pₙ])': 'min{k : p₃ + ... + pₖ ≥ ½ (p₃ + ... + pₙ)}'}, inplace=True)
     graffiti.knowledge_table.rename(columns={'variance([p₃, p₄, ..., pₙ])': 'σ²(p₃,..., pₙ)'}, inplace=True)
@@ -42,6 +44,15 @@ def main_menu():
     graffiti.knowledge_table.rename(columns={'range([p₃, p₄, ..., pₙ])': '(max{pₖ : 3 ≤ k ≤ n} - min{pₖ : 3 ≤ k ≤ n})'}, inplace=True)
     graffiti.knowledge_table.rename(columns={'median([p₃, p₄, ..., pₙ])': 'median(p₃,..., pₙ)'}, inplace=True)
     graffiti.knowledge_table.rename(columns={'zeros_clustered([p₃, p₄, ..., pₙ])': 'simple polytope graph with at least 50% of zero values in the p-vector clustered contiguously'}, inplace=True)
+    graffiti.knowledge_table.rename(columns={'domination_number': 'γ'}, inplace=True)
+    graffiti.knowledge_table.rename(columns={'independence_number': 'α'}, inplace=True)
+    graffiti.knowledge_table.rename(columns={'total_domination_number': 'γₜ'}, inplace=True)
+    graffiti.knowledge_table.rename(columns={'vertex_cover_number': 'β'}, inplace=True)
+    graffiti.knowledge_table.rename(columns={'matching_number': 'μ'}, inplace=True)
+    graffiti.knowledge_table.rename(columns={'diameter': 'diam'}, inplace=True)
+    graffiti.knowledge_table.rename(columns={'girth': 'g'}, inplace=True)
+    graffiti.knowledge_table.rename(columns={'radius': 'rad'}, inplace=True)
+    graffiti.knowledge_table.rename(columns={'zero_adjacency_eigenvalue_count': 'count_zero(λ₁, λ₂, ..., λₙ)'}, inplace=True)
     graffiti.knowledge_table['p₃'] = graffiti.knowledge_table['[p₃, p₄, ..., pₙ]'].apply(lambda x: x[0])
     graffiti.knowledge_table['p₄'] = graffiti.knowledge_table['[p₃, p₄, ..., pₙ]'].apply(lambda x: x[1] if len(x) > 1 else 0)
     graffiti.knowledge_table['p₅'] = graffiti.knowledge_table['[p₃, p₄, ..., pₙ]'].apply(lambda x: x[2] if len(x) > 2 else 0)
@@ -65,6 +76,9 @@ def main_menu():
 
     # drop the columns that are not needed
     graffiti.drop_columns(['[p₃, p₄, ..., pₙ]', 'length([p₃, p₄, ..., pₙ])', 'adjacency_matrix', 'E', 'simple_polytope_graph_with_p6_greater_than_zero'])
+
+    graffiti.numerical_columns = graffiti.knowledge_table.select_dtypes(include=['number']).columns.tolist()
+    graffiti.boolean_columns = graffiti.knowledge_table.select_dtypes(include='bool').columns.tolist()
 
     # Get numerical columns of the knowledge_table.
     numerical_columns = graffiti.knowledge_table.select_dtypes(include=['number']).columns.tolist()

@@ -5,7 +5,7 @@ from rich.prompt import Prompt
 from questionary import select
 import questionary
 
-from polytope_app.utils import custom_style, convert_hypothesis, write_on_the_wall
+from polytope_app.utils import custom_style, keyword_map, write_on_the_wall
 
 __all__ = [
     'conjecture_mode',
