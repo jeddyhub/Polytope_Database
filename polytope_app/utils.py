@@ -58,130 +58,130 @@ def convert_hypothesis(hypothesis):
     else:
         return hypothesis
 
-def view_conjectures(agent, target_invariants=None, search=True, console=None):
-    """
-    Interactively view conjectures for the given target invariant(s).
+# def view_conjectures(agent, target_invariants=None, search=True, console=None):
+#     """
+#     Interactively view conjectures for the given target invariant(s).
 
-    The user first selects a target invariant, then scrolls through the conjecture
-    summaries (for equal, upper, and lower conjectures). Upon selection, detailed
-    information is displayed in a Rich Panel with bold magenta and green formatting.
+#     The user first selects a target invariant, then scrolls through the conjecture
+#     summaries (for equal, upper, and lower conjectures). Upon selection, detailed
+#     information is displayed in a Rich Panel with bold magenta and green formatting.
 
-    Args:
-        agent: The object containing conjectures and, optionally, the knowledge_table.
-        target_invariants (list, optional): A list of target invariants to display. If None,
-            all keys from agent.conjectures are used.
-        search (bool): Whether to show additional details from the agent's knowledge table.
-        console: A Rich Console instance for output.
-    """
+#     Args:
+#         agent: The object containing conjectures and, optionally, the knowledge_table.
+#         target_invariants (list, optional): A list of target invariants to display. If None,
+#             all keys from agent.conjectures are used.
+#         search (bool): Whether to show additional details from the agent's knowledge table.
+#         console: A Rich Console instance for output.
+#     """
 
 
-    # Helper to format sharp instances into columns.
-    def format_sharp_instances(instances, num_columns=4, indent="    "):
-        items = sorted(str(item) for item in instances)
-        if not items:
-            return ""
-        max_width = max(len(item) for item in items)
-        rows = (len(items) + num_columns - 1) // num_columns
-        formatted_rows = []
-        for row in range(rows):
-            row_items = []
-            for col in range(num_columns):
-                idx = col * rows + row
-                if idx < len(items):
-                    row_items.append(items[idx].ljust(max_width))
-            formatted_rows.append(indent + "   ".join(row_items))
-        return "\n".join(formatted_rows)
+#     # Helper to format sharp instances into columns.
+#     def format_sharp_instances(instances, num_columns=4, indent="    "):
+#         items = sorted(str(item) for item in instances)
+#         if not items:
+#             return ""
+#         max_width = max(len(item) for item in items)
+#         rows = (len(items) + num_columns - 1) // num_columns
+#         formatted_rows = []
+#         for row in range(rows):
+#             row_items = []
+#             for col in range(num_columns):
+#                 idx = col * rows + row
+#                 if idx < len(items):
+#                     row_items.append(items[idx].ljust(max_width))
+#             formatted_rows.append(indent + "   ".join(row_items))
+#         return "\n".join(formatted_rows)
 
-    # Select a target invariant if more than one is provided.
-    if target_invariants is None:
-        target_invariants = list(agent.conjectures.keys())
-    if len(target_invariants) > 1:
-        target = select("Select a target invariant:", choices=target_invariants).ask()
-    else:
-        target = target_invariants[0]
+#     # Select a target invariant if more than one is provided.
+#     if target_invariants is None:
+#         target_invariants = list(agent.conjectures.keys())
+#     if len(target_invariants) > 1:
+#         target = select("Select a target invariant:", choices=target_invariants).ask()
+#     else:
+#         target = target_invariants[0]
 
-    conj_data = agent.conjectures.get(target, {})
-    equal_conj = conj_data.get("equals", [])
-    upper_conj = conj_data.get("upper", [])
-    lower_conj = conj_data.get("lower", [])
+#     conj_data = agent.conjectures.get(target, {})
+#     equal_conj = conj_data.get("equals", [])
+#     upper_conj = conj_data.get("upper", [])
+#     lower_conj = conj_data.get("lower", [])
 
-    # Build a list of conjecture entries with summary labels.
-    entries = []
-    def add_entries(conj_list, conj_type):
-        for i, conj in enumerate(conj_list, start=1):
-            hypothesis = convert_hypothesis(conj.hypothesis)
-            conclusion = conj._set_conclusion()
-            statement = f"For any {hypothesis}, {conclusion}."
-            label = f"[bold]{conj_type} Conjecture {i}:[/bold] {statement}"
-            entries.append({
-                "label": label,
-                "conj": conj,
-                "type": conj_type,
-                "index": i
-            })
-    if equal_conj:
-        add_entries(equal_conj, "Equal")
-    if upper_conj:
-        add_entries(upper_conj, "Upper")
-    if lower_conj:
-        add_entries(lower_conj, "Lower")
+#     # Build a list of conjecture entries with summary labels.
+#     entries = []
+#     def add_entries(conj_list, conj_type):
+#         for i, conj in enumerate(conj_list, start=1):
+#             hypothesis = convert_hypothesis(conj.hypothesis)
+#             conclusion = conj._set_conclusion()
+#             statement = f"For any {hypothesis}, {conclusion}."
+#             label = f"[bold]{conj_type} Conjecture {i}:[/bold] {statement}"
+#             entries.append({
+#                 "label": label,
+#                 "conj": conj,
+#                 "type": conj_type,
+#                 "index": i
+#             })
+#     if equal_conj:
+#         add_entries(equal_conj, "Equal")
+#     if upper_conj:
+#         add_entries(upper_conj, "Upper")
+#     if lower_conj:
+#         add_entries(lower_conj, "Lower")
 
-    if not entries:
-        console.print("[bold red]No conjectures generated for this target invariant.[/bold red]")
-        return
+#     if not entries:
+#         console.print("[bold red]No conjectures generated for this target invariant.[/bold red]")
+#         return
 
-    # Let the user select a conjecture to view in detail.
-    choices = [entry["label"] for entry in entries]
-    selected_label = select("Select a conjecture to view details:", choices=choices + ["Exit"]).ask()
-    if selected_label == "Exit":
-        return
+#     # Let the user select a conjecture to view in detail.
+#     choices = [entry["label"] for entry in entries]
+#     selected_label = select("Select a conjecture to view details:", choices=choices + ["Exit"]).ask()
+#     if selected_label == "Exit":
+#         return
 
-    selected_entry = next((entry for entry in entries if entry["label"] == selected_label), None)
-    if not selected_entry:
-        console.print("[red]Invalid selection.[/red]")
-        return
+#     selected_entry = next((entry for entry in entries if entry["label"] == selected_label), None)
+#     if not selected_entry:
+#         console.print("[red]Invalid selection.[/red]")
+#         return
 
-    conj = selected_entry["conj"]
-    # Build detailed information.
-    hypothesis = convert_hypothesis(conj.hypothesis)
-    conclusion = conj._set_conclusion()
-    details_lines = []
-    details_lines.append(f"[bold magenta]Statement:[/bold magenta] For any [bold green]{hypothesis}[/bold green], [bold green]{conclusion}[/bold green].")
-    details_lines.append(f"[bold magenta]Target Invariant:[/bold magenta] {conj.target}")
-    details_lines.append(f"[bold magenta]Bound Type:[/bold magenta] {conj.bound_type}")
-    if hasattr(conj, 'complexity') and conj.complexity is not None:
-        details_lines.append(f"[bold magenta]Complexity:[/bold magenta] {conj.complexity}")
-    if conj.touch > 0:
-        if conj.touch > 1:
-            details_lines.append(f"[bold magenta]Sharp on:[/bold magenta] {conj.touch} objects.")
-        else:
-            details_lines.append(f"[bold magenta]Sharp on:[/bold magenta] 1 object.")
-    else:
-        details_lines.append(f"[bold magenta]Inequality is strict.[/bold magenta]")
-    if hasattr(conj, 'sharp_instances') and conj.sharp_instances:
-        details_lines.append(f"[bold magenta]Sharp Instances:[/bold magenta]")
-        details_lines.append(format_sharp_instances(conj.sharp_instances))
-    # Optionally, include percentage info from the knowledge table.
-    if hasattr(agent, 'knowledge_table') and conj.hypothesis in agent.knowledge_table.columns:
-        hyp_df = agent.knowledge_table[agent.knowledge_table[conj.hypothesis] == True]
-        total_hyp = len(hyp_df)
-        if total_hyp > 0:
-            percent_sharp = 100 * conj.touch / total_hyp
-            details_lines.append(f"[bold magenta]Percentage of hypothesis objects that are sharp:[/bold magenta] {percent_sharp:.1f}%")
-        else:
-            details_lines.append(f"[bold magenta]No objects satisfy the hypothesis.[/bold magenta]")
-    details = "\n".join(details_lines)
+#     conj = selected_entry["conj"]
+#     # Build detailed information.
+#     hypothesis = convert_hypothesis(conj.hypothesis)
+#     conclusion = conj._set_conclusion()
+#     details_lines = []
+#     details_lines.append(f"[bold magenta]Statement:[/bold magenta] For any [bold green]{hypothesis}[/bold green], [bold green]{conclusion}[/bold green].")
+#     details_lines.append(f"[bold magenta]Target Invariant:[/bold magenta] {conj.target}")
+#     details_lines.append(f"[bold magenta]Bound Type:[/bold magenta] {conj.bound_type}")
+#     if hasattr(conj, 'complexity') and conj.complexity is not None:
+#         details_lines.append(f"[bold magenta]Complexity:[/bold magenta] {conj.complexity}")
+#     if conj.touch > 0:
+#         if conj.touch > 1:
+#             details_lines.append(f"[bold magenta]Sharp on:[/bold magenta] {conj.touch} objects.")
+#         else:
+#             details_lines.append(f"[bold magenta]Sharp on:[/bold magenta] 1 object.")
+#     else:
+#         details_lines.append(f"[bold magenta]Inequality is strict.[/bold magenta]")
+#     if hasattr(conj, 'sharp_instances') and conj.sharp_instances:
+#         details_lines.append(f"[bold magenta]Sharp Instances:[/bold magenta]")
+#         details_lines.append(format_sharp_instances(conj.sharp_instances))
+#     # Optionally, include percentage info from the knowledge table.
+#     if hasattr(agent, 'knowledge_table') and conj.hypothesis in agent.knowledge_table.columns:
+#         hyp_df = agent.knowledge_table[agent.knowledge_table[conj.hypothesis] == True]
+#         total_hyp = len(hyp_df)
+#         if total_hyp > 0:
+#             percent_sharp = 100 * conj.touch / total_hyp
+#             details_lines.append(f"[bold magenta]Percentage of hypothesis objects that are sharp:[/bold magenta] {percent_sharp:.1f}%")
+#         else:
+#             details_lines.append(f"[bold magenta]No objects satisfy the hypothesis.[/bold magenta]")
+#     details = "\n".join(details_lines)
 
-    # Display details in a Panel.
-    panel = Panel(details,
-                  title=f"[bold magenta]{selected_entry['type']} Conjecture {selected_entry['index']} Details[/bold magenta]",
-                  style="magenta")
-    console.print(panel)
+#     # Display details in a Panel.
+#     panel = Panel(details,
+#                   title=f"[bold magenta]{selected_entry['type']} Conjecture {selected_entry['index']} Details[/bold magenta]",
+#                   style="magenta")
+#     console.print(panel, markup=False)
 
-    # Wait for user input before returning to the list.
-    Prompt.ask("Press Enter to return to the conjecture list")
-    # Recursively show the list again for the same target invariant.
-    view_conjectures(agent, target_invariants=[target], search=search, console=console)
+#     # Wait for user input before returning to the list.
+#     Prompt.ask("Press Enter to return to the conjecture list")
+#     # Recursively show the list again for the same target invariant.
+#     view_conjectures(agent, target_invariants=[target], search=search, console=console)
 
 
 def write_on_the_wall(agent, numerical_columns, target_invariants=None, search=True, console=None):
@@ -278,7 +278,8 @@ def write_on_the_wall(agent, numerical_columns, target_invariants=None, search=T
     details_lines = []
     hypothesis = convert_hypothesis(selected_conj.hypothesis)
     conclusion = selected_conj._set_conclusion()
-    details_lines.append(f"[bold magenta]Statement:[bold green] For any [bold green]{hypothesis}[/bold green], [bold green]{conclusion}[/bold green].")
+    statement = f"\n For any {hypothesis}, \n       {conclusion}. \n"
+    details_lines.append(f"[bold magenta]Statement: [bold green]{statement}")
     details_lines.append(f"[bold magenta]Target Invariant:[/bold magenta] {selected_conj.target}")
     details_lines.append(f"[bold magenta]Bound Type:[/bold magenta] {selected_conj.bound_type}")
     if hasattr(selected_conj, 'complexity') and selected_conj.complexity is not None:
@@ -378,7 +379,7 @@ def write_on_the_wall(agent, numerical_columns, target_invariants=None, search=T
     # Display the details in a Rich Panel.
     panel = Panel(details_text,
                   title=f"[bold magenta]{category_choice} Conjecture Details[/bold magenta]",
-                  style="magenta")
+                  style="cyan")
     console.print(panel)
 
     # Wait for the user and then return to the conjecture menu.
