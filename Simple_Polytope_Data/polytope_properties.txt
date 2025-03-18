@@ -20,6 +20,3 @@ harmonic_index
 domination_number
 total_domination_number
 connected_and_bipartite
-wiener_index
-schultz_index
-gutman_index
