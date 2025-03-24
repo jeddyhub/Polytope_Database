@@ -73,9 +73,16 @@ def main_menu():
     graffiti.knowledge_table['fullerene'] = (graffiti.knowledge_table['n'] == 6) & (graffiti.knowledge_table['p₃'] == 0) & (graffiti.knowledge_table['p₄'] == 0) & (graffiti.knowledge_table['p₅'] > 0) & (graffiti.knowledge_table['p₆'] > 0)
 
 
-
     # drop the columns that are not needed
-    graffiti.drop_columns(['[p₃, p₄, ..., pₙ]', 'length([p₃, p₄, ..., pₙ])', 'adjacency_matrix', 'E', 'simple_polytope_graph_with_p6_greater_than_zero'])
+    graffiti.drop_columns([
+        '[p₃, p₄, ..., pₙ]',
+        'length([p₃, p₄, ..., pₙ])',
+        'adjacency_matrix',
+        'E',
+        'simple_polytope_graph_with_p6_greater_than_zero',
+        'μ',
+        'min(p₃,..., pₙ)',
+    ])
 
     graffiti.numerical_columns = graffiti.knowledge_table.select_dtypes(include=['number']).columns.tolist()
     graffiti.boolean_columns = graffiti.knowledge_table.select_dtypes(include='bool').columns.tolist()

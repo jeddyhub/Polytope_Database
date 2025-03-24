@@ -122,7 +122,7 @@ def conjecture_mode(graffiti, numerical_columns, console):
                         upper_b_max=3,
                         upper_b_min=-3,
                         W_lower_bound=None,
-                        W_upper_bound=None,
+                        W_upper_bound=10,
                     )
                     other_invariants = probability_distribution(target_property[0], graffiti.knowledge_table)
                     graffiti.conjecture(
@@ -135,7 +135,7 @@ def conjecture_mode(graffiti, numerical_columns, console):
                         upper_b_max=2,
                         upper_b_min=-2,
                         W_lower_bound=None,
-                        W_upper_bound=None,
+                        W_upper_bound=10,
                     )
                     other_invariants = probability_distribution(target_property[0], graffiti.knowledge_table)
                     graffiti.conjecture(
@@ -148,7 +148,7 @@ def conjecture_mode(graffiti, numerical_columns, console):
                         upper_b_max=1,
                         upper_b_min=-1,
                         W_lower_bound=None,
-                        W_upper_bound=None,
+                        W_upper_bound=10,
                     )
                     # other_invariants = probability_distribution(target_property[0], graffiti.knowledge_table)
                     # graffiti.conjecture(
@@ -161,7 +161,7 @@ def conjecture_mode(graffiti, numerical_columns, console):
                     #     upper_b_max=None,
                     #     upper_b_min=None,
                     #     W_lower_bound=None,
-                    #     W_upper_bound=None,
+                    #     W_upper_bound=10,
                     # )
                     other_invariants = probability_distribution(target_property[0], graffiti.knowledge_table)
                     graffiti.conjecture(
@@ -174,7 +174,7 @@ def conjecture_mode(graffiti, numerical_columns, console):
                         upper_b_max=3,
                         upper_b_min=-3,
                         W_lower_bound=None,
-                        W_upper_bound=None,
+                        W_upper_bound=10,
                     )
                     other_invariants = probability_distribution(target_property[0], graffiti.knowledge_table)
                     graffiti.conjecture(
@@ -187,7 +187,7 @@ def conjecture_mode(graffiti, numerical_columns, console):
                         upper_b_max=2,
                         upper_b_min=-2,
                         W_lower_bound=None,
-                        W_upper_bound=None,
+                        W_upper_bound=10,
                     )
                     other_invariants = probability_distribution(target_property[0], graffiti.knowledge_table)
                     graffiti.conjecture(
@@ -200,7 +200,7 @@ def conjecture_mode(graffiti, numerical_columns, console):
                         upper_b_max=1,
                         upper_b_min=-1,
                         W_lower_bound=None,
-                        W_upper_bound=None,
+                        W_upper_bound=10,
                     )
                     # other_invariants = probability_distribution(target_property[0], graffiti.knowledge_table)
                     # graffiti.conjecture(
@@ -213,7 +213,7 @@ def conjecture_mode(graffiti, numerical_columns, console):
                     #     upper_b_max=None,
                     #     upper_b_min=None,
                     #     W_lower_bound=None,
-                    #     W_upper_bound=None,
+                    #     W_upper_bound=10,
                     # )
                     other_invariants = probability_distribution(target_property[0], graffiti.knowledge_table)
                     graffiti.conjecture(
@@ -226,7 +226,7 @@ def conjecture_mode(graffiti, numerical_columns, console):
                         upper_b_max=3,
                         upper_b_min=-3,
                         W_lower_bound=None,
-                        W_upper_bound=None,
+                        W_upper_bound=10,
                     )
                     other_invariants = probability_distribution(target_property[0], graffiti.knowledge_table)
                     graffiti.conjecture(
@@ -239,7 +239,7 @@ def conjecture_mode(graffiti, numerical_columns, console):
                         upper_b_max=2,
                         upper_b_min=-2,
                         W_lower_bound=None,
-                        W_upper_bound=None,
+                        W_upper_bound=10,
                     )
                     other_invariants = probability_distribution(target_property[0], graffiti.knowledge_table)
                     graffiti.conjecture(
@@ -252,7 +252,7 @@ def conjecture_mode(graffiti, numerical_columns, console):
                         upper_b_max=1,
                         upper_b_min=-1,
                         W_lower_bound=None,
-                        W_upper_bound=None,
+                        W_upper_bound=10,
                     )
                     # other_invariants = probability_distribution(target_property[0], graffiti.knowledge_table)
                     # graffiti.conjecture(
@@ -265,7 +265,7 @@ def conjecture_mode(graffiti, numerical_columns, console):
                     #     upper_b_max=None,
                     #     upper_b_min=None,
                     #     W_lower_bound=None,
-                    #     W_upper_bound=None,
+                    #     W_upper_bound=10,
                     # )
                 console.print("[bold cyan]Conjecture complete![/bold cyan]")
                 # Display the conjecture results using write on the wall with search = True
